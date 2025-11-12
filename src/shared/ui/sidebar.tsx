@@ -59,6 +59,16 @@ export const Sidebar = ({ className }: SidebarProps) => {
           Загрузка наградных листов
         </Link>
         <Link
+          to="/candidates"
+          className={`rounded-md font-medium px-8  py-2 transition ${
+            location.pathname === "/candidates"
+              ? "bg-blue-100 hover:bg-blue-200 font-medium"
+              : "hover:bg-gray-100 text-[#AAAAAA]"
+          }`}
+        >
+          Кандидаты
+        </Link>
+        <Link
           to="/protocol"
           className={`rounded-md font-medium px-8  py-2 transition ${
             location.pathname === "/protocol"
@@ -92,4 +102,3 @@ export const Sidebar = ({ className }: SidebarProps) => {
     </aside>
   );
 };
-

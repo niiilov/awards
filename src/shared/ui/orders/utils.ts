@@ -8,22 +8,28 @@ export const extractNumberFromString = (str: string): number => {
   return numbers ? parseInt(numbers, 10) : 0;
 };
 
-export const transformFilteredData = (filteredRequests: any): TableRowData[] => {
+export const transformFilteredData = (
+  filteredRequests: any
+): TableRowData[] => {
   console.log("Данные от фильтра: ", filteredRequests);
-  
+
   let requestsArray: any[] = [];
-  
+
   if (filteredRequests && Array.isArray(filteredRequests)) {
     requestsArray = filteredRequests;
-  } else if (filteredRequests && filteredRequests.data && Array.isArray(filteredRequests.data)) {
+  } else if (
+    filteredRequests &&
+    filteredRequests.data &&
+    Array.isArray(filteredRequests.data)
+  ) {
     requestsArray = filteredRequests.data;
   } else {
     console.warn("Неизвестный формат данных:", filteredRequests);
     requestsArray = [];
   }
-  
+
   console.log("Обработанный массив:", requestsArray);
-  
+
   if (requestsArray.length === 0) {
     return [];
   }

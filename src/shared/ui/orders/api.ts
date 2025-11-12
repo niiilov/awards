@@ -1,7 +1,11 @@
 // shared/ui/orders/ui/api.ts
 
 import { api } from "@shared/api/axios";
-import type { ChangeStatusRequest, UploadActRequest, UploadResponse } from "./types";
+import type {
+  ChangeStatusRequest,
+  UploadActRequest,
+  UploadResponse,
+} from "./types";
 
 export const changeRequestStatus = async (
   request: ChangeStatusRequest
@@ -11,11 +15,14 @@ export const changeRequestStatus = async (
 };
 
 // Функция для получения акта НА отлов (документ для работы)
-export const getCatchActDocument = async (requestNumber: string, requestYear: string): Promise<string> => {
+export const getCatchActDocument = async (
+  requestNumber: string,
+  requestYear: string
+): Promise<string> => {
   const response = await api.get("/requests/download_request", {
-    params: { 
+    params: {
       number: requestNumber,
-      year: requestYear 
+      year: requestYear,
     },
     validateStatus: (status) => status < 500,
   });
@@ -30,11 +37,14 @@ export const getCatchActDocument = async (requestNumber: string, requestYear: st
 };
 
 // Функция для получения готового акта отлова (выполненная работа)
-export const getCompletedActDocument = async (requestNumber: string, requestYear: string): Promise<string> => {
+export const getCompletedActDocument = async (
+  requestNumber: string,
+  requestYear: string
+): Promise<string> => {
   const response = await api.get("/requests/download_act", {
-    params: { 
+    params: {
       number: requestNumber,
-      year: requestYear
+      year: requestYear,
     },
     validateStatus: (status) => status < 500,
   });
@@ -69,12 +79,12 @@ export const uploadAct = async (
 export const completeRequest = async (requestId: string): Promise<void> => {
   try {
     console.log("Изменение статуса заявки на 'Выполнена':", requestId);
-    
+
     const response = await changeRequestStatus({
       id: requestId,
-      status: "Выполнена"
+      status: "Выполнена",
     });
-    
+
     console.log("Статус успешно изменен:", response);
   } catch (error: any) {
     console.error("Ошибка при изменении статуса:", error);

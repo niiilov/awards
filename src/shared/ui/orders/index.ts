@@ -1,1 +1,0 @@
-export { ApplicationsTable } from "./ui";

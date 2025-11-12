@@ -12,7 +12,7 @@ import {
 
 // Варианты оформления
 const selectVariants = cva(
-  "flex h-9 w-full min-w-0 rounded-xl bg-transparent px-3 py-5 text-base outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-[14px]",
+  "flex h-9 w-full flex-1 w-full sm:flex-1 md:w-auto md:w-auto min-w-0 rounded-xl text-black bg-transparent px-3 text-base outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-[14px]",
   {
     variants: {
       variant: {

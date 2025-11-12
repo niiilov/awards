@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 interface InputWithLabelProps {
   icon?: ReactNode;
-  label: string;
+  label?: string;
   type: string;
   id?: string;
   placeholder?: string;
@@ -28,14 +28,17 @@ export function InputWithLabel({
 }: InputWithLabelProps) {
   return (
     <div className={cn("grid w-full items-center gap-3", className)}>
-       <Label htmlFor={id}>
-        <span className="flex items-center gap-1">
-          {icon && <span className="text-gray-500">{icon}</span>}
-          {label}
-        </span>
-      </Label>
+      {label && (
+        <Label htmlFor={id}>
+          <span className="flex items-center gap-1">
+            {icon && <span className="text-gray-500">{icon}</span>}
+            {label}
+          </span>
+        </Label>
+      )}
       <Input
         type={type}
+        className="h-[42px]"
         onChange={onChange}
         value={value}
         id={id}
