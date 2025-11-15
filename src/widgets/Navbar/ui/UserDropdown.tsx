@@ -1,24 +1,33 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
 import { ChevronDown } from "lucide-react";
 import { useClickOutside } from "@shared/hooks/useClickOutside";
+import type { User } from "@features/auth/api/types";
 
 interface UserDropdownProps {
   children: string;
-  onLogout: () => void;
 }
 
-export const UserDropdown = ({ children, onLogout }: UserDropdownProps) => {
+export const UserDropdown = ({ children }: UserDropdownProps) => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  const paths = [
+    "/dashboard",
+    "/upload-awards",
+    "/candidates",
+    "/protocol",
+    "/certificates",
+    "/template-library",
+  ];
+
+  const getProfile = paths.includes(currentPath);
+
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(dropdownRef, () => setOpen(false));
-
-  const handleLogoutClick = () => {
-    onLogout();
-    setOpen(false);
-  };
 
   return (
     <div ref={dropdownRef} className="relative">
@@ -40,15 +49,25 @@ export const UserDropdown = ({ children, onLogout }: UserDropdownProps) => {
 
       {open && (
         <div className="absolute right-0 mt-2 bg-white flex flex-col gap-1 px-2 py-2 border rounded-xl shadow-md">
-          <Link
-            to="/profile"
-            onClick={() => setOpen(false)}
-            className="font-semibold text-sm px-6 py-2 hover:bg-[#CADDFF] rounded-sm w-40"
-          >
-            Профиль
-          </Link>
+          {getProfile ? (
+            <Link
+              to="/profile"
+              onClick={() => setOpen(false)}
+              className="font-semibold text-sm px-6 py-2 hover:bg-[#CADDFF] rounded-sm w-40"
+            >
+              Профиль
+            </Link>
+          ) : (
+            <Link
+              to="/dashborard"
+              onClick={() => setOpen(false)}
+              className="font-semibold text-sm px-6 py-2 hover:bg-[#CADDFF] rounded-sm w-40"
+            >
+              Дашборд
+            </Link>
+          )}
           <button
-            onClick={handleLogoutClick}
+            onClick={() => setOpen(false)}
             className="font-semibold text-start cursor-pointer text-sm px-6 py-2 hover:bg-[#CADDFF] rounded-sm w-40"
           >
             Выйти
