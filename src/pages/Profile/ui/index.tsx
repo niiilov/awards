@@ -23,7 +23,7 @@ export const Profile = observer(() => {
     handlePasswordChange,
     handleCancel,
     handleChangePassword,
-  } = useProfile(user?.login || "");
+  } = useProfile(user?.username || "");
 
   // Если пользователь еще не загружен
   if (!user) {
@@ -57,7 +57,7 @@ export const Profile = observer(() => {
                 <Label htmlFor="name">Имя</Label>
                 <Input
                   id="name"
-                  defaultValue={user.full_name || "Не указано"}
+                  defaultValue={user.username || "Не указано"}
                   readOnly
                 />
               </div>
@@ -65,15 +65,15 @@ export const Profile = observer(() => {
                 <Label htmlFor="login">Логин</Label>
                 <Input
                   id="login"
-                  defaultValue={user.login || "Не указан"}
+                  defaultValue={user.username || "Не указан"}
                   readOnly
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="role">Роль</Label>
+                <Label htmlFor="id">ID пользователя</Label>
                 <Input
-                  id="role"
-                  defaultValue={user.role || "Не указана"}
+                  id="id"
+                  defaultValue={user.id || "Не указан"}
                   readOnly
                 />
               </div>
