@@ -3,22 +3,23 @@ import type { User } from "@features/auth/api/types";
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
+const USER_DATA_KEY = 'userData';
 
 export const saveTokens = (accessToken: string, refreshToken: string, user?: User) => {
-  if (!accessToken || accessToken === 'undefined' || accessToken === 'null') {
+  if (!isValidToken(accessToken)) {
     console.error('Попытка сохранить невалидный access token');
     return;
   }
   
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
   
-  if (refreshToken) {
+  if (refreshToken && isValidToken(refreshToken)) {
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   }
   
   // Сохраняем пользователя если передан
   if (user) {
-    localStorage.setItem('userData', JSON.stringify(user));
+    localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
   }
   
   console.log('Токены и пользователь сохранены');
@@ -27,7 +28,7 @@ export const saveTokens = (accessToken: string, refreshToken: string, user?: Use
 export const getAccessToken = (): string | null => {
   const token = localStorage.getItem(ACCESS_TOKEN_KEY);
   
-  if (!token || token === 'undefined' || token === 'null') {
+  if (!isValidToken(token)) {
     console.log('Access token не найден или невалиден');
     return null;
   }
@@ -38,7 +39,7 @@ export const getAccessToken = (): string | null => {
 export const getRefreshToken = (): string | null => {
   const token = localStorage.getItem(REFRESH_TOKEN_KEY);
   
-  if (!token || token === 'undefined' || token === 'null') {
+  if (!isValidToken(token)) {
     console.log('Refresh token не найден или невалиден');
     return null;
   }
@@ -46,10 +47,23 @@ export const getRefreshToken = (): string | null => {
   return token;
 };
 
+export const getUserData = (): User | null => {
+  try {
+    const userData = localStorage.getItem(USER_DATA_KEY);
+    if (!userData) return null;
+    
+    return JSON.parse(userData) as User;
+  } catch (error) {
+    console.error('Ошибка при чтении данных пользователя:', error);
+    return null;
+  }
+};
+
 export const removeTokens = () => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
-  console.log('Токены удалены');
+  localStorage.removeItem(USER_DATA_KEY);
+  console.log('Токены и данные пользователя удалены');
 };
 
 export const isValidToken = (token: string | null): boolean => {

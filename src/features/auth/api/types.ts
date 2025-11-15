@@ -1,21 +1,16 @@
 export interface SignInDto {
-  login: string;
+  username: string;
   password: string;
 };
 
 export type User = {
   id: string;
-  full_name: string;
-  login: string;
-  role: string;
+  username: string;
 };
 
 export interface AuthResponse {
-  message: string;
-  status: string;
-  tokens: {
-    access_token: string;
-    refresh_token: string;
-  };
-  user: User;
+  access_token: string;
+  refresh_token: string;
+  id: string;
+  username: string;
 }

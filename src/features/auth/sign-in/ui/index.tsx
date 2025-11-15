@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 
 import { Button } from "@shared/ui/button";
 import { InputWithLabel } from "@shared/ui/inputLabel";
-import { InputWithPassword } from "@shared/ui/inputPassword";
 import { Alert, AlertTitle, AlertDescription } from "@shared/ui/alert";
 
-import { useAuth } from "@features/auth/hooks/useAuth";
+import { useSignIn } from "@features/auth/hooks/useSignIn";
 import clsx from "clsx";
 
 import Logo from "./assets/logo.svg";
@@ -14,48 +13,26 @@ import object1 from "./assets/object1.svg";
 import object2 from "./assets/object2.svg";
 
 export const SignInForm = () => {
-  const { signIn, loading } = useAuth();
-  const [login, setLogin] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [error, setError] = useState<string | null>(null);
-  const [generalError, setGeneralError] = useState<string | null>(null);
-
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    setError(null);
-    setGeneralError(null);
-
-    try {
-      const success = await signIn({ login, password });
-
-      if (success) {
-        const from = location.state?.from?.pathname || "/dashboard";
-        navigate(from, { replace: true });
-      } else {
-        setError("Неверный логин или пароль. Попробуйте снова.");
-      }
-    } catch (err) {
-      setGeneralError(
-        "Не удалось выполнить вход. Пожалуйста, попробуйте позже."
-      );
-      console.error("Ошибка входа:", err);
-    }
-  };
+  const {
+    login,
+    setLogin,
+    password,
+    setPassword,
+    error,
+    generalError,
+    loading,
+    onSubmit,
+    clearErrors,
+  } = useSignIn();
 
   useEffect(() => {
     if (error || generalError) {
       const timer = setTimeout(() => {
-        setError(null);
-        setGeneralError(null);
+        clearErrors();
       }, 4000);
       return () => clearTimeout(timer);
     }
-  }, [error, generalError]);
+  }, [error, generalError, clearErrors]);
 
   return (
     <>
@@ -87,17 +64,33 @@ export const SignInForm = () => {
             <hr className="border-[#9FB8FD] border-[0.5px] w-full" />
           </div>
           <h2>Вход</h2>
+          
           <InputWithLabel
-            label="Эл. адрес"
-            type="email"
-            placeholder="Введите эл. почту"
+            label="Логин"
+            type="text"
+            placeholder="Введите логин"
+            value={login}
+            onChange={(e) => setLogin(e.target.value)}
+            required
           />
+          
           <InputWithLabel
             label="Пароль"
             type="password"
             placeholder="Введите пароль"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
           />
-          <Button className="w-full rounded-[8px]">Вход</Button>
+          
+          <Button 
+            className="w-full rounded-[8px]" 
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Вход..." : "Вход"}
+          </Button>
+          
           <span>
             Еще нет аккаунта?{" "}
             <Link to="/sign-up" className="text-blue-600 underline">

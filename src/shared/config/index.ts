@@ -1,5 +1,5 @@
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||"http://82.202.169.245:8091/api";
+  import.meta.env.VITE_API_URL ||"http://localhost:8080/api";
 
 export const ROUTES = {
   HOME: "/",

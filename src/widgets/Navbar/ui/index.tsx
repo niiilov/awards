@@ -11,14 +11,12 @@ import {
 } from "@shared/ui/dialog";
 import { useState } from "react";
 import { UserDropdown } from "./UserDropdown";
+import { useAuth } from "@features/auth/hooks/useAuth";
 
 export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Моки вместо стора
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [user, setUser] = useState({ full_name: "Иван Иванов" });
+  const { isAuth, user, logout } = useAuth();
 
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
 
@@ -27,8 +25,7 @@ export const Navbar = () => {
   const handleCancelLogout = () => setShowLogoutConfirmation(false);
 
   const handleConfirmLogout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
+    logout();
     setShowLogoutConfirmation(false);
     navigate("/sign-in");
   };
@@ -93,7 +90,7 @@ export const Navbar = () => {
       <div className="max-w-[1440px] items-center justify-between flex w-full">
         {/* Логотип */}
         <Link
-          to={isAuthenticated ? "/dashboard" : "/"}
+          to={isAuth ? "/dashboard" : "/"}
           className="flex items-center gap-2"
         >
           <div className="flex items-center gap-5">
@@ -107,7 +104,7 @@ export const Navbar = () => {
         </Link>
 
         {/* Правый блок */}
-        {!isAuthenticated ? (
+        {!isAuth ? (
           <div className="flex items-center gap-1 sm:gap-3">
             <Link to="/sign-in">
               <Button
@@ -143,13 +140,17 @@ export const Navbar = () => {
                 className="max-w-sm w-full p-4 lg:hidden"
               >
                 <AuthMenu />
-                <UserDropdown>{user?.full_name || "Пользователь"}</UserDropdown>
+                <UserDropdown onLogout={handleLogoutClick}>
+                  {user?.username || "Пользователь"}
+                </UserDropdown>
               </SheetContent>
             </Sheet>
 
             {/* Меню для десктопа */}
             <div className="hidden lg:flex items-center gap-4">
-              <UserDropdown>{user?.full_name || "Пользователь"}</UserDropdown>
+              <UserDropdown onLogout={handleLogoutClick}>
+                {user?.username || "Пользователь"}
+              </UserDropdown>
             </div>
           </>
         )}
