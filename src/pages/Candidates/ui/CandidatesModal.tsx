@@ -5,28 +5,14 @@ import { Button } from "@shared/ui/button";
 import { Upload, Download, Edit, Save, X, Trash2 } from "lucide-react";
 import { useDeleteCandidate } from "@features/candidates/hooks/useDeleteCandidate";
 import { useChangeStatus } from "@features/candidates/hooks/useChangeStatus";
-
-export interface CandidateData {
-  id: string;
-  full_name: string;
-  position: string;
-  experience_total: number;
-  experience_current: number;
-  status: string;
-  birth_date?: string;
-  achievements?: string;
-  has_conviction?: boolean;
-  previous_awards?: string;
-  reason?: string;
-  created_at?: string;
-}
+import type { Candidate } from "@features/candidates/hooks/useCandidates";
 
 export interface CandidatesModalProps {
   open: boolean;
   onClose: () => void;
-  data?: CandidateData;
+  data?: Candidate;
   onStatusChange?: (id: string, newStatus: string) => void;
-  onOpenUploadModal?: (candidateData: CandidateData) => void;
+  onOpenUploadModal?: (candidateData: Candidate) => void;
   onCandidateDelete?: (id: string) => void;
 }
 
@@ -39,31 +25,85 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
   onCandidateDelete,
 }) => {
   const [isStatusEditMode, setIsStatusEditMode] = useState(false);
-  const [localData, setLocalData] = useState<CandidateData | undefined>(data);
+  const [localData, setLocalData] = useState<Candidate | undefined>(data);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { changeCandidateStatus, loading: statusLoading, error: statusError, clearError: clearStatusError } = useChangeStatus();
   const { deleteCandidate: deleteCandidateApi, loading: deleteLoading, error: deleteError, clearError: clearDeleteError } = useDeleteCandidate();
 
+  // Допустимые значения статуса из базы данных
+  const statusOptions = [
+    { value: "Прошёл", label: "Прошёл" },
+    { value: "Не прошёл", label: "Не прошёл" },
+  ];
+
+  // Функция для нормализации статуса для отображения
+  const normalizeStatusForDisplay = (status: string): string => {
+    if (!status) return "Не прошёл";
+    
+    const statusLower = status.toLowerCase().trim();
+    
+    if (statusLower === "прошёл" || statusLower === "прошел" || statusLower === "passed" || statusLower === "approved" || statusLower === "одобрено") {
+      return "Прошёл";
+    }
+    
+    return "Не прошёл";
+  };
+
   useEffect(() => {
-    setLocalData(data);
-    setSelectedStatus(data?.status || "");
+    if (data) {
+      setLocalData(data);
+      const normalizedStatus = normalizeStatusForDisplay(data.status);
+      setSelectedStatus(normalizedStatus);
+      console.log('Инициализация статуса:', {
+        original: data.status,
+        normalized: normalizedStatus
+      });
+    }
     setShowDeleteConfirm(false);
     clearStatusError();
     clearDeleteError();
-  }, [data, clearStatusError, clearDeleteError]);
+  }, [data]);
+
+  const handleStatusSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newStatus = e.target.value;
+    console.log('Изменение статуса в селекте:', newStatus);
+    setSelectedStatus(newStatus);
+  };
 
   const handleStatusUpdate = async () => {
-    if (!localData?.id || !selectedStatus) return;
+    if (!localData?.id || !selectedStatus) {
+      console.log('Недостаточно данных для обновления:', { localData, selectedStatus });
+      return;
+    }
 
     try {
-      // Используем useChangeStatus для обновления статуса
-      await changeCandidateStatus(localData.id, selectedStatus);
+      console.log('Начало обновления статуса:', {
+        candidateId: localData.id,
+        selectedStatus
+      });
+
+      // Отправляем статус в точном формате базы данных
+      await changeCandidateStatus(localData.id, selectedStatus, localData);
       
-      setLocalData(prev => prev ? { ...prev, status: selectedStatus } : prev);
+      console.log('Статус успешно обновлен в API');
+
+      // Обновляем локальное состояние
+      const updatedCandidate = { 
+        ...localData, 
+        status: selectedStatus
+      };
+      setLocalData(updatedCandidate);
+      
+      // Вызываем колбэк
       onStatusChange?.(localData.id, selectedStatus);
+      
+      // Выходим из режима редактирования
       setIsStatusEditMode(false);
+      
+      console.log('Локальное состояние обновлено:', updatedCandidate);
+
     } catch (err: any) {
       console.error("Ошибка при обновлении статуса:", err);
     }
@@ -93,42 +133,17 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
   };
 
   const formatExperience = (years: number) => {
+    if (years === null || years === undefined) return "Не указан";
     if (years === 0) return "Менее года";
     if (years === 1) return "1 год";
     if (years >= 2 && years <= 4) return `${years} года`;
     return `${years} лет`;
   };
 
-  const translateStatus = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "approved":
-        return "Одобрено";
-      case "rejected":
-        return "Отклонено";
-      case "pending":
-        return "На рассмотрении";
-      default:
-        return status || "На рассмотрении";
-    }
-  };
-
   const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      case "pending":
-      default:
-        return "bg-yellow-100 text-yellow-800";
-    }
+    const normalizedStatus = normalizeStatusForDisplay(status);
+    return normalizedStatus === "Прошёл" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
   };
-
-  const statusOptions = [
-    { value: "pending", label: "На рассмотрении" },
-    { value: "approved", label: "Одобрено" },
-    { value: "rejected", label: "Отклонено" },
-  ];
 
   if (!open || !localData) return null;
 
@@ -184,24 +199,26 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
 
             <div className="flex justify-between items-center">
               <span className="font-medium">Статус:</span>
-              {isStatusEditMode ? (
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="border rounded px-2 py-1"
-                  disabled={statusLoading}
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <span className={`px-2 py-1 rounded ${getStatusColor(localData.status)}`}>
-                  {translateStatus(localData.status)}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {isStatusEditMode ? (
+                  <select
+                    value={selectedStatus}
+                    onChange={handleStatusSelectChange}
+                    className="border rounded px-2 py-1 min-w-[120px]"
+                    disabled={statusLoading}
+                  >
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className={`px-2 py-1 rounded ${getStatusColor(localData.status)}`}>
+                    {normalizeStatusForDisplay(localData.status)}
+                  </span>
+                )}
+              </div>
             </div>
 
             {localData.birth_date && (
@@ -266,7 +283,7 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
                 className="flex-1"
                 onClick={() => {
                   setIsStatusEditMode(false);
-                  setSelectedStatus(localData.status || "");
+                  setSelectedStatus(normalizeStatusForDisplay(localData.status));
                   clearStatusError();
                   clearDeleteError();
                 }}

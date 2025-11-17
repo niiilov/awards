@@ -46,7 +46,7 @@ export const AllCandidates = () => {
 
   // Функция для форматирования стажа
   const formatExperience = (years: number) => {
-    if (!years && years !== 0) return "Не указан";
+    if (years === null || years === undefined) return "Не указан";
     if (years === 0) return "Менее года";
     if (years === 1) return "1 год";
     if (years >= 2 && years <= 4) return `${years} года`;
@@ -57,28 +57,31 @@ export const AllCandidates = () => {
   const getStatusColor = (status: string) => {
     if (!status) return "text-gray-600";
     
-    switch (status.toLowerCase()) {
-      case "прошел":
-      case "passed":
-        return "text-green-600";
-      case "не прошел":
-      case "failed":
-      case "отклонено":
-        return "text-red-600";
-      default:
-        return "text-gray-600";
-    }
+    const normalizedStatus = normalizeStatus(status);
+    return normalizedStatus === "Прошел" ? "text-green-600" : "text-red-600";
   };
 
   // Функция для нормализации статуса (только два варианта)
   const normalizeStatus = (status: string) => {
     if (!status) return "Не прошел";
     
-    const statusLower = status.toLowerCase();
-    if (statusLower === "прошел" || statusLower === "passed" || statusLower === "approved") {
+    const statusLower = status.toLowerCase().trim();
+    if (
+      statusLower === "прошел" || 
+      statusLower === "прошёл" || 
+      statusLower === "passed" || 
+      statusLower === "approved" ||
+      statusLower === "одобрено"
+    ) {
       return "Прошел";
     }
     return "Не прошел";
+  };
+
+  // Функция для форматирования ФИО (убираем лишние пробелы)
+  const formatFullName = (fullName: string) => {
+    if (!fullName) return "Не указано";
+    return fullName.replace(/\s+/g, ' ').trim();
   };
 
   if (loading) {
@@ -149,7 +152,7 @@ export const AllCandidates = () => {
                   className="cursor-pointer hover:bg-blue-100 transition"
                 >
                   <TableCell className="text-center">
-                    {candidate.full_name || "Не указано"}
+                    {formatFullName(candidate.full_name)}
                   </TableCell>
                   <TableCell className="text-center">
                     {candidate.position || "Не указана"}

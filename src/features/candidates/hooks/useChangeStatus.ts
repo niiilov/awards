@@ -1,34 +1,53 @@
 // features/candidates/hooks/useChangeStatus.ts
 import { useState } from "react";
+import type { Candidate } from "./useCandidates";
 
 export const useChangeStatus = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const changeCandidateStatus = async (candidateId: string, newStatus: string) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const changeCandidateStatus = async (candidateId: string, newStatus: string, currentCandidate?: Candidate) => {
+    setLoading(true);
+    setError(null);
 
+    try {
       const { api } = await import("@shared/api/axios");
       
-      // Получаем текущие данные кандидата
-      const currentResponse = await api.get(`/candidates/${candidateId}`);
-      const currentCandidate = currentResponse.data;
+      console.log('Изменение статуса кандидата:', {
+        candidateId,
+        newStatus,
+        currentCandidate
+      });
 
-      // Обновляем только статус, сохраняя остальные данные
+      // Формируем полный объект кандидата с ВСЕМИ обязательными полями
       const updateData = {
-        ...currentCandidate,
-        status: newStatus
+        id: candidateId,
+        full_name: currentCandidate?.full_name || "",
+        position: currentCandidate?.position || "",
+        experience_total: currentCandidate?.experience_total || 0,
+        experience_current: currentCandidate?.experience_current || 0,
+        status: newStatus,
+        birth_date: currentCandidate?.birth_date || "",
+        achievements: currentCandidate?.achievements || "",
+        has_conviction: currentCandidate?.has_conviction || false,
+        previous_awards: currentCandidate?.previous_awards || "",
+        reason: currentCandidate?.reason || "",
+        created_at: currentCandidate?.created_at || new Date().toISOString()
       };
 
-      // Отправляем обновленные данные
+      console.log('Данные для обновления:', updateData);
+
       const response = await api.put(`/candidates/${candidateId}`, updateData);
-      
+
+      console.log('Статус кандидата успешно изменен:', response.data);
       return response.data;
     } catch (err: any) {
       console.error("Ошибка при изменении статуса кандидата:", err);
-      const errorMessage = err.response?.data?.message || "Не удалось изменить статус кандидата";
+      
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.message || 
+                          "Не удалось изменить статус кандидата";
+      
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -36,9 +55,7 @@ export const useChangeStatus = () => {
     }
   };
 
-  const clearError = () => {
-    setError(null);
-  };
+  const clearError = () => setError(null);
 
   return {
     changeCandidateStatus,

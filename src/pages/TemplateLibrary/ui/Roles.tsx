@@ -10,21 +10,66 @@ import {
   TableCell,
 } from "@shared/ui/table";
 import { RolesModal } from "./RolesModal";
+import { useCommissionRoles } from "@features/template-library/hooks/useCommissionRoles";
 
 export const Roles = () => {
-  // --- Модалка ---
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProtocol, setSelectedProtocol] = useState(null);
+  const [selectedRole, setSelectedRole] = useState<any>(null);
+  const { roles, loading, error, deleteRole } = useCommissionRoles();
 
-  const handleOpenModal = (data: any = null) => {
-    setSelectedProtocol(data);
+  const handleOpenModal = (role: any = null) => {
+    setSelectedRole(role);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedProtocol(null);
+    setSelectedRole(null);
   };
+
+  const handleDeleteRole = async (roleId: string) => {
+    if (confirm("Вы уверены, что хотите удалить эту роль?")) {
+      await deleteRole(roleId);
+    }
+  };
+
+  const handleRoleAdded = () => {
+    console.log("Роль добавлена");
+  };
+
+  if (loading) {
+    return (
+      <Card className="border-none w-full p-0 shadow-none">
+        <CardHeader className="w-full p-0">
+          <div className="flex items-center justify-between w-full">
+            <CardTitle className="text-xl font-bold">Роли</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="flex justify-center items-center py-8">
+            Загрузка ролей...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="border-none w-full p-0 shadow-none">
+        <CardHeader className="w-full p-0">
+          <div className="flex items-center justify-between w-full">
+            <CardTitle className="text-xl font-bold">Роли</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="flex justify-center items-center py-8 text-red-600">
+            {error}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-none w-full p-0 shadow-none">
@@ -38,38 +83,41 @@ export const Roles = () => {
         <Table>
           <TableHeader>
             <TableRow className="bg-[#CADDFF]">
-              <TableHead className="text-center text-[#6C6C6E] cursor-pointer hover:bg-blue-200 transition">
-                <div className="flex items-center justify-center gap-1">
-                  Роли
-                </div>
-              </TableHead>
-              <TableHead className="text-[#6C6C6E] cursor-pointer hover:bg-blue-200 transition">
-                <div className="flex items-center gap-1">ФИО</div>
-              </TableHead>
-              <TableHead className="text-[#6C6C6E] cursor-pointer hover:bg-blue-200 transition">
-                <div className="flex items-center gap-1">Должность</div>
-              </TableHead>
-              <TableHead className="text-[#6C6C6E] cursor-pointer hover:bg-blue-200 transition">
-                <div className="flex items-center gap-1">Действия</div>
-              </TableHead>
+              <TableHead className="text-center text-[#6C6C6E]">Роль</TableHead>
+              <TableHead className="text-center text-[#6C6C6E]">ФИО</TableHead>
+              <TableHead className="text-[#6C6C6E]">Должность</TableHead>
+              <TableHead className="text-[#6C6C6E]">Действия</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            <TableRow>
-              <TableCell className="text-center">
-                Председатель комиссии
-              </TableCell>
-              <TableCell className="text-center">
-                Иванов Иван Иванович
-              </TableCell>
-              <TableCell>Заместитель главы администрации района</TableCell>
-              <TableCell className="text-red-500 cursor-pointer">
-                Удалить
-              </TableCell>
-            </TableRow>
-
-            {/* Дубли можно позже заменить на рендер массива */}
+            {roles.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-8">
+                  Роли не найдены
+                </TableCell>
+              </TableRow>
+            ) : (
+              roles.map((role) => (
+                <TableRow key={role.id}>
+                  <TableCell className="text-center">
+                    {role.role}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {role.full_name}
+                  </TableCell>
+                  <TableCell>{role.position}</TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => handleDeleteRole(role.id)}
+                      className="text-red-500 hover:text-red-700 cursor-pointer transition"
+                    >
+                      Удалить
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
 
@@ -88,11 +136,11 @@ export const Roles = () => {
         </div>
       </CardContent>
 
-      {/* --- Модалка --- */}
       <RolesModal
         open={isModalOpen}
         onClose={handleCloseModal}
-        data={selectedProtocol}
+        data={selectedRole}
+        onRoleAdded={handleRoleAdded}
       />
     </Card>
   );
