@@ -77,15 +77,14 @@ class AuthStore {
       console.log('=== Отправка запроса на вход ===');
       console.log('Данные:', dto);
 
-      // Исправляем данные для отправки согласно вашему API
+      // Данные для отправки согласно API
       const requestData = {
-        username: dto.username, // меняем login на username
+        username: dto.username,
         password: dto.password,
       };
 
       console.log('Отправляемые данные:', requestData);
 
-      // Меняем эндпоинт и тип запроса
       const response = await api.post<AuthResponse>("/auth/login", requestData);
       const data = response.data;
       
@@ -98,10 +97,11 @@ class AuthStore {
 
       console.log('Полученный access token:', data.access_token.substring(0, 20) + '...');
 
-      // Создаем объект пользователя из ответа
+      // Создаем объект пользователя из ответа с email
       const user: User = {
         id: data.id,
         username: data.username,
+        email: data.email, // Email приходит с сервера
       };
 
       runInAction(() => {
@@ -153,6 +153,10 @@ class AuthStore {
 
   get userDisplayName() {
     return this.user?.username || "";
+  }
+
+  get userEmail() {
+    return this.user?.email || "";
   }
 
   get userInitials() {

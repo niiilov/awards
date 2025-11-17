@@ -70,10 +70,10 @@ export const Profile = observer(() => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="id">ID пользователя</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="id"
-                  defaultValue={user.id || "Не указан"}
+                  id="email"
+                  defaultValue={user.email || "Не указан"}
                   readOnly
                 />
               </div>

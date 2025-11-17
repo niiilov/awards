@@ -25,13 +25,13 @@ export const Navbar = () => {
   const handleCancelLogout = () => setShowLogoutConfirmation(false);
 
   const handleConfirmLogout = () => {
-    logout();
+    logout(); // Вызываем logout из useAuth
     setShowLogoutConfirmation(false);
     navigate("/sign-in");
   };
 
   const AuthMenu = () => (
-    <nav className="flex mt-6 flex-col gap-2 text-base">
+    <nav className="flex flex-col gap-2 text-base">
       <Link
         to="/dashboard"
         className={`rounded-md px-4 py-2 transition ${
@@ -139,15 +139,20 @@ export const Navbar = () => {
                 side="left"
                 className="max-w-sm w-full p-4 lg:hidden"
               >
-                <AuthMenu />
-                <UserDropdown onLogout={handleLogoutClick}>
-                  {user?.username || "Пользователь"}
-                </UserDropdown>
+                <div className="mt-6">
+                  <AuthMenu />
+                </div>
+                <div className="mt-4">
+                  <UserDropdown onLogout={handleLogoutClick}>
+                    {user?.username || "Пользователь"}
+                  </UserDropdown>
+                </div>
               </SheetContent>
             </Sheet>
 
             {/* Меню для десктопа */}
-            <div className="hidden lg:flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-6">
+              
               <UserDropdown onLogout={handleLogoutClick}>
                 {user?.username || "Пользователь"}
               </UserDropdown>
@@ -160,7 +165,7 @@ export const Navbar = () => {
           open={showLogoutConfirmation}
           onOpenChange={setShowLogoutConfirmation}
         >
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="w-full">
             <DialogHeader>
               <DialogTitle className="text-xl">
                 Подтверждение выхода
@@ -171,7 +176,6 @@ export const Navbar = () => {
             </div>
             <DialogFooter className="flex gap-2 sm:justify-end">
               <Button
-                className="w-full"
                 variant="outline"
                 color="grey"
                 onClick={handleCancelLogout}
@@ -179,7 +183,6 @@ export const Navbar = () => {
                 Отмена
               </Button>
               <Button
-                className="w-full"
                 variant="destructive"
                 color="default"
                 onClick={handleConfirmLogout}

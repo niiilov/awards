@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@shared/ui/card";
-import { OrderModal } from "@shared/ui/orders";
 import {
   Table,
   TableHeader,
@@ -10,50 +9,44 @@ import {
   TableCell,
 } from "@shared/ui/table";
 import { useCandidates } from "@features/candidates/hooks/useCandidates";
-import type { Candidate } from "@features/candidates/api/types";
+import type { Candidate } from "@features/candidates/hooks/useCandidates";
+import { CandidatesModal } from "./CandidatesModal";
 
 export const AllCandidates = () => {
-  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-  const { candidates, loading, error, updateCandidateStatus } = useCandidates();
-
-  // Гарантируем, что candidatesToRender всегда массив
-  const candidatesToRender = Array.isArray(candidates) ? candidates : [];
-
-  console.log('candidates в компоненте:', candidates);
-  console.log('candidatesToRender:', candidatesToRender);
-  console.log('Is Array?', Array.isArray(candidates));
+  const { candidates, loading, error, updateCandidateStatus, refetch } = useCandidates();
 
   const handleRowClick = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
-    setOrderModalOpen(true);
+    setModalOpen(true);
   };
 
-  const handleCloseOrderModal = () => {
-    setOrderModalOpen(false);
+  const handleCloseModal = () => {
+    setModalOpen(false);
     setSelectedCandidate(null);
   };
 
-  const handleStatusChange = (id: string | number, newStatus: string) => {
-    if (selectedCandidate) {
-      updateCandidateStatus(id.toString(), newStatus);
+  const handleStatusChange = (id: string, newStatus: string) => {
+    updateCandidateStatus(id, newStatus);
+    // Обновляем выбранного кандидата если он открыт в модалке
+    if (selectedCandidate && selectedCandidate.id === id) {
       setSelectedCandidate({ ...selectedCandidate, status: newStatus });
     }
   };
 
-  const handleOpenUploadModal = () => {
-    console.log("Открыть модалку загрузки файла");
+  const handleCandidateDelete = (candidateId: string) => {
+    // После удаления перезагружаем список кандидатов
+    refetch();
+    // Закрываем модалку если удален текущий кандидат
+    if (selectedCandidate && selectedCandidate.id === candidateId) {
+      handleCloseModal();
+    }
   };
 
-  // Функция для преобразования Candidate в TableRowData
-  const convertCandidateToTableRowData = (candidate: Candidate) => {
-    return {
-      number: candidate.id,
-      applicant: candidate.full_name,
-      urgency: "Стандартная",
-      date: candidate.created_at || new Date().toISOString(),
-      ...candidate
-    };
+  const handleOpenUploadModal = (candidateData: Candidate) => {
+    console.log("Открыть модалку загрузки файла для:", candidateData);
+    // TODO: Реализовать открытие модалки загрузки файлов
   };
 
   // Функция для форматирования стажа
@@ -156,14 +149,14 @@ export const AllCandidates = () => {
           </TableHeader>
 
           <TableBody>
-            {candidatesToRender.length === 0 ? (
+            {candidates.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8">
                   Кандидаты не найдены
                 </TableCell>
               </TableRow>
             ) : (
-              candidatesToRender.map((candidate) => (
+              candidates.map((candidate) => (
                 <TableRow
                   key={candidate.id}
                   onClick={() => handleRowClick(candidate)}
@@ -189,12 +182,12 @@ export const AllCandidates = () => {
       </CardContent>
 
       {selectedCandidate && (
-        <OrderModal
-          open={orderModalOpen}
-          onClose={handleCloseOrderModal}
-          data={convertCandidateToTableRowData(selectedCandidate)}
+        <CandidatesModal
+          open={modalOpen}
+          onClose={handleCloseModal}
+          data={selectedCandidate}
           onStatusChange={handleStatusChange}
-          onOpenUploadModal={handleOpenUploadModal}
+          onCandidateDelete={handleCandidateDelete}
         />
       )}
     </Card>

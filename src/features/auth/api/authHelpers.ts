@@ -52,9 +52,16 @@ export const getUserData = (): User | null => {
     const userData = localStorage.getItem(USER_DATA_KEY);
     if (!userData) return null;
     
-    return JSON.parse(userData) as User;
+    const user = JSON.parse(userData);
+    
+    // Возвращаем пользователя с email
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email || "", // Обеспечиваем наличие email
+    };
   } catch (error) {
-    console.error('Ошибка при чтении данных пользователя:', error);
+    console.error('Ошибка при получении данных пользователя:', error);
     return null;
   }
 };

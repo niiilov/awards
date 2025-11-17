@@ -2,7 +2,6 @@ import { Button } from "@shared/ui/button";
 import { Sidebar } from "@shared/ui/sidebar";
 import { Select } from "@shared/ui/dropdown";
 import { InputWithLabel } from "@shared/ui/inputLabel";
-import { Search } from "lucide-react";
 import { AllCandidates } from "./AllCandidates";
 
 export const Candidates = () => {
