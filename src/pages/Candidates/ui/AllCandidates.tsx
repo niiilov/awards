@@ -44,11 +44,6 @@ export const AllCandidates = () => {
     }
   };
 
-  const handleOpenUploadModal = (candidateData: Candidate) => {
-    console.log("Открыть модалку загрузки файла для:", candidateData);
-    // TODO: Реализовать открытие модалки загрузки файлов
-  };
-
   // Функция для форматирования стажа
   const formatExperience = (years: number) => {
     if (!years && years !== 0) return "Не указан";
@@ -63,36 +58,27 @@ export const AllCandidates = () => {
     if (!status) return "text-gray-600";
     
     switch (status.toLowerCase()) {
-      case "approved":
-      case "одобрено":
       case "прошел":
+      case "passed":
         return "text-green-600";
-      case "rejected":
-      case "отклонено":
       case "не прошел":
+      case "failed":
+      case "отклонено":
         return "text-red-600";
-      case "pending":
-      case "рассмотрение":
-        return "text-yellow-600";
       default:
         return "text-gray-600";
     }
   };
 
-  // Функция для перевода статуса
-  const translateStatus = (status: string) => {
-    if (!status) return "Не указан";
+  // Функция для нормализации статуса (только два варианта)
+  const normalizeStatus = (status: string) => {
+    if (!status) return "Не прошел";
     
-    switch (status.toLowerCase()) {
-      case "approved":
-        return "Одобрено";
-      case "rejected":
-        return "Отклонено";
-      case "pending":
-        return "На рассмотрении";
-      default:
-        return status;
+    const statusLower = status.toLowerCase();
+    if (statusLower === "прошел" || statusLower === "passed" || statusLower === "approved") {
+      return "Прошел";
     }
+    return "Не прошел";
   };
 
   if (loading) {
@@ -172,7 +158,7 @@ export const AllCandidates = () => {
                     {formatExperience(candidate.experience_total)}
                   </TableCell>
                   <TableCell className={`text-center ${getStatusColor(candidate.status)}`}>
-                    {translateStatus(candidate.status)}
+                    {normalizeStatus(candidate.status)}
                   </TableCell>
                 </TableRow>
               ))

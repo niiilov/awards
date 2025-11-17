@@ -52,32 +52,46 @@ export const useProfile = (username: string) => {
       return;
     }
 
+    // Проверка, что новый пароль отличается от старого
+    if (passwordData.oldPassword === passwordData.newPassword) {
+      setError("Новый пароль должен отличаться от старого");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { api } = await import("@shared/api/axios");
       
-      // TODO: Заменить на реальный эндпоинт смены пароля когда он будет доступен
-      // Временно используем моковый вызов
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Пример реального вызова (раскомментировать когда API будет готово):
-      // await api.put("/auth/change-password", {
-      //   username,
-      //   oldPassword: passwordData.oldPassword,
-      //   newPassword: passwordData.newPassword,
-      // });
+      // Реальный вызов API для смены пароля
+      await api.post("/auth/change-password", {
+        username: username,
+        old_password: passwordData.oldPassword,
+        new_password: passwordData.newPassword,
+      });
 
-      // Временная заглушка - всегда успех для демонстрации
       setSuccess(true);
       handleCancel(); // Очищаем поля после успешного сохранения
       
     } catch (err: any) {
       console.error("Ошибка смены пароля:", err);
-      setError(
-        err.response?.data?.message || 
-        "Не удалось изменить пароль. Пожалуйста, попробуйте позже."
-      );
+      
+      // Обработка различных ошибок от сервера
+      if (err.response?.status === 400) {
+        setError(
+          err.response?.data?.message || 
+          "Неверный старый пароль. Пожалуйста, проверьте введенные данные."
+        );
+      } else if (err.response?.status === 500) {
+        setError(
+          "Внутренняя ошибка сервера. Пожалуйста, попробуйте позже."
+        );
+      } else {
+        setError(
+          err.response?.data?.message || 
+          "Не удалось изменить пароль. Пожалуйста, попробуйте позже."
+        );
+      }
     } finally {
       setLoading(false);
     }

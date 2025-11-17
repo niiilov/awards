@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@shared/ui/button";
 import { Upload, Download, Edit, Save, X, Trash2 } from "lucide-react";
-import { authStore } from "@features/auth";
 import { useDeleteCandidate } from "@features/candidates/hooks/useDeleteCandidate";
 import { useChangeStatus } from "@features/candidates/hooks/useChangeStatus";
 
@@ -290,7 +289,6 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
               <div className="flex gap-2">
                 <Button
                   variant="cube"
-                  color="red"
                   className="flex-1"
                   onClick={handleDeleteClick}
                   disabled={deleteLoading}

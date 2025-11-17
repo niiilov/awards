@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
 import { ChevronDown } from "lucide-react";
 import { useClickOutside } from "@shared/hooks/useClickOutside";
-import type { User } from "@features/auth/api/types";
 
 interface UserDropdownProps {
   children: string;
