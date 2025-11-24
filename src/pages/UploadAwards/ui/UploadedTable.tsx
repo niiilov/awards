@@ -7,7 +7,6 @@ import {
   TableBody,
   TableCell,
 } from "@shared/ui/table";
-import { Link } from "react-router-dom";
 import { Button } from "@shared/ui/button";
 import { useUploadedFiles } from "@features/upload-awards/hooks/useUploadedFiles";
 
@@ -15,7 +14,7 @@ interface UploadedTableProps {
   onFileSelect?: (filename: string) => void;
 }
 
-export const UploadedTable = ({ onFileSelect }: UploadedTableProps) => {
+export const UploadedTable = ({  }: UploadedTableProps) => {
   const { files, loading, error, deleteFile, downloadFile, refetch } = useUploadedFiles();
 
   const getStatusColor = (status: string) => {
@@ -143,20 +142,18 @@ export const UploadedTable = ({ onFileSelect }: UploadedTableProps) => {
                   <TableCell className="text-center">
                     <div className="flex justify-center gap-2">
                       <Button
-                        variant="ghost"
+                      variant="cube"
                         size="sm"
                         onClick={() => handleDownload(file.name)}
                         disabled={loading}
-                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                       >
                         Скачать
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="sm"
+                      variant="cube"
+                        color="grey"
                         onClick={() => handleDelete(file.name)}
                         disabled={loading}
-                        className="text-red-600 hover:text-red-800 hover:bg-red-50"
                       >
                         Удалить
                       </Button>
@@ -167,15 +164,6 @@ export const UploadedTable = ({ onFileSelect }: UploadedTableProps) => {
             )}
           </TableBody>
         </Table>
-        
-        {files.length > 0 && (
-          <Link
-            to="/order-log"
-            className="text-center text-gray-500 py-4 cursor-pointer hover:underline block"
-          >
-            Показать больше...
-          </Link>
-        )}
       </CardContent>
     </Card>
   );

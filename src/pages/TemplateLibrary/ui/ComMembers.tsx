@@ -126,9 +126,9 @@ export const ComMembers = () => {
             Добавить
           </Button>
 
-          <Button variant="ghost" className="w-full bg-neutral-300 text-black">
+          {/* <Button variant="ghost" className="w-full bg-neutral-300 text-black">
             Раскрыть список
-          </Button>
+          </Button> */}
         </div>
       </CardContent>
 

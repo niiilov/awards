@@ -12,7 +12,6 @@ import {
 } from "@shared/ui/table";
 import { ArrowUpDown } from "lucide-react";
 import { Link } from "react-router-dom";
-import FilterDropdown from "@shared/ui/filter";
 import { authStore } from "@features/auth";
 import { OrderModal } from "./orderModal";
 // import { UploadDocumentModal } from "./uploadActModal";
@@ -191,19 +190,6 @@ export const ApplicationsTable = ({
 
   return (
     <Card className="border-none w-full shadow-none">
-      <CardHeader className="w-full">
-        <div className="flex items-center justify-between w-full">
-          <CardTitle className="text-xl font-bold">{title}</CardTitle>
-          {((!showMoreButton && user?.login === "ryaon_comm") ||
-            (!showMoreButton && user?.login === "podryadchik")) && (
-            <FilterDropdown
-              onFilteredData={handleFilteredData}
-              onLoading={handleFilterLoading}
-              onError={handleFilterError}
-            />
-          )}
-        </div>
-      </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
