@@ -1,8 +1,5 @@
 import { Link } from "react-router-dom";
 import { Button } from "@shared/ui/button";
-import { RefreshCcwDot } from "lucide-react";
-import { File } from "lucide-react";
-import { CircleCheck, ArrowRight } from "lucide-react";
 import { useState } from "react";
 
 export const Home = () => {
@@ -30,7 +27,7 @@ export const Home = () => {
 
         {/* Кнопка */}
         <div className="mt-8 flex gap-3 items-center justify-center">
-          <Link to="/application">
+          <Link to="/sign-in">
             <Button
               className="text-base rounded-[8px]"
               variant="default"

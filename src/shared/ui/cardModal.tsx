@@ -1,6 +1,5 @@
 import React from "react";
 import { Button } from "@shared/ui/button";
-import { FileText } from "lucide-react";
 
 interface OrderModalProps {
   open: boolean;

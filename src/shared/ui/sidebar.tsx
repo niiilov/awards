@@ -1,15 +1,4 @@
-import { ClipboardPlus } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { authStore } from "@features/auth";
-import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@shared/ui/dialog";
-import { Button } from "@shared/ui/button";
+import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
 
 interface SidebarProps {
@@ -18,18 +7,6 @@ interface SidebarProps {
 
 export const Sidebar = ({ className }: SidebarProps) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
-
-  const handleLogoutClick = () => {
-    setShowLogoutConfirmation(true);
-  };
-
-  const handleConfirmLogout = () => {
-    authStore.logout();
-    navigate("/");
-    setShowLogoutConfirmation(false);
-  };
 
   return (
     <aside className={clsx(className, " h-fit mr-4 p-4")}>
