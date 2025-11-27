@@ -1,10 +1,9 @@
-// features/candidates/components/CandidatesModal.tsx
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@shared/ui/button";
 import { Upload, Download, Edit, Save, X, Trash2 } from "lucide-react";
 import { useDeleteCandidate } from "@features/candidates/hooks/useDeleteCandidate";
-import { useChangeStatus } from "@features/candidates/hooks/useChangeStatus";
+import { useUpdateCandidateStatus } from "@features/candidates/hooks/useUpdateCandidateStatus";
+import { useUpdateCandidateConviction } from "@features/candidates/hooks/useUpdateCandidateConviction";
 import type { Candidate } from "@features/candidates/hooks/useCandidates";
 
 export interface CandidatesModalProps {
@@ -25,11 +24,14 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
   onCandidateDelete,
 }) => {
   const [isStatusEditMode, setIsStatusEditMode] = useState(false);
+  const [isConvictionEditMode, setIsConvictionEditMode] = useState(false);
   const [localData, setLocalData] = useState<Candidate | undefined>(data);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedConviction, setSelectedConviction] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const { changeCandidateStatus, loading: statusLoading, error: statusError, clearError: clearStatusError } = useChangeStatus();
+  const { updateCandidateStatus, loading: statusLoading, error: statusError, clearError: clearStatusError } = useUpdateCandidateStatus();
+  const { updateCandidateConviction, loading: convictionLoading, error: convictionError, clearError: clearConvictionError } = useUpdateCandidateConviction();
   const { deleteCandidate: deleteCandidateApi, loading: deleteLoading, error: deleteError, clearError: clearDeleteError } = useDeleteCandidate();
 
   // Допустимые значения статуса из базы данных
@@ -56,15 +58,18 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
       setLocalData(data);
       const normalizedStatus = normalizeStatusForDisplay(data.status);
       setSelectedStatus(normalizedStatus);
-      console.log('Инициализация статуса:', {
+      setSelectedConviction(data.has_conviction || false);
+      console.log('Инициализация данных:', {
         original: data.status,
-        normalized: normalizedStatus
+        normalized: normalizedStatus,
+        has_conviction: data.has_conviction
       });
     }
     setShowDeleteConfirm(false);
     clearStatusError();
+    clearConvictionError();
     clearDeleteError();
-  }, [data]);
+  }, [data, open]);
 
   const handleStatusSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value;
@@ -72,9 +77,39 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
     setSelectedStatus(newStatus);
   };
 
+  const handleConvictionSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newConviction = e.target.value === "true";
+    console.log('Изменение судимости в селекте:', newConviction);
+    setSelectedConviction(newConviction);
+  };
+
+  // Функции для управления редактированием статуса
+  const handleStartStatusEdit = () => {
+    setIsStatusEditMode(true);
+    clearStatusError();
+  };
+
+  const handleCancelStatusEdit = () => {
+    setIsStatusEditMode(false);
+    setSelectedStatus(normalizeStatusForDisplay(localData?.status || ""));
+    clearStatusError();
+  };
+
+  // Функции для управления редактированием судимости
+  const handleStartConvictionEdit = () => {
+    setIsConvictionEditMode(true);
+    clearConvictionError();
+  };
+
+  const handleCancelConvictionEdit = () => {
+    setIsConvictionEditMode(false);
+    setSelectedConviction(localData?.has_conviction || false);
+    clearConvictionError();
+  };
+
   const handleStatusUpdate = async () => {
     if (!localData?.id || !selectedStatus) {
-      console.log('Недостаточно данных для обновления:', { localData, selectedStatus });
+      console.log('Недостаточно данных для обновления статуса:', { localData, selectedStatus });
       return;
     }
 
@@ -84,8 +119,7 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
         selectedStatus
       });
 
-      // Отправляем статус в точном формате базы данных
-      await changeCandidateStatus(localData.id, selectedStatus, localData);
+      await updateCandidateStatus(localData.id, selectedStatus);
       
       console.log('Статус успешно обновлен в API');
 
@@ -106,6 +140,40 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
 
     } catch (err: any) {
       console.error("Ошибка при обновлении статуса:", err);
+    }
+  };
+
+  const handleConvictionUpdate = async () => {
+    if (!localData?.id) {
+      console.log('Недостаточно данных для обновления судимости:', { localData });
+      return;
+    }
+
+    try {
+      console.log('Начало обновления судимости:', {
+        candidateId: localData.id,
+        selectedConviction
+      });
+
+      // Передаем только ID кандидата и значение судимости
+      await updateCandidateConviction(localData.id, selectedConviction);
+      
+      console.log('Судимость успешно обновлена в API');
+
+      // Обновляем локальное состояние
+      const updatedCandidate = { 
+        ...localData, 
+        has_conviction: selectedConviction
+      };
+      setLocalData(updatedCandidate);
+      
+      // Выходим из режима редактирования
+      setIsConvictionEditMode(false);
+      
+      console.log('Локальное состояние обновлено:', updatedCandidate);
+
+    } catch (err: any) {
+      console.error("Ошибка при обновлении судимости:", err);
     }
   };
 
@@ -145,6 +213,10 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
     return normalizedStatus === "Прошёл" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
   };
 
+  const getConvictionColor = (hasConviction: boolean) => {
+    return hasConviction ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800";
+  };
+
   if (!open || !localData) return null;
 
   return (
@@ -161,9 +233,9 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
           Кандидат: {localData.full_name || "Не указано"}
         </h2>
 
-        {(statusError || deleteError) && (
+        {(statusError || convictionError || deleteError) && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <div className="text-red-800 text-sm">{statusError || deleteError}</div>
+            <div className="text-red-800 text-sm">{statusError || convictionError || deleteError}</div>
           </div>
         )}
 
@@ -218,6 +290,45 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
                     {normalizeStatusForDisplay(localData.status)}
                   </span>
                 )}
+                {!isStatusEditMode && (
+                  <button
+                    onClick={handleStartStatusEdit}
+                    className="text-blue-600 hover:text-blue-800"
+                    title="Изменить статус"
+                  >
+                    <Edit size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Наличие судимости:</span>
+              <div className="flex items-center gap-2">
+                {isConvictionEditMode ? (
+                  <select
+                    value={selectedConviction.toString()}
+                    onChange={handleConvictionSelectChange}
+                    className="border rounded px-2 py-1 min-w-[80px]"
+                    disabled={convictionLoading}
+                  >
+                    <option value="true">Да</option>
+                    <option value="false">Нет</option>
+                  </select>
+                ) : (
+                  <span className={`px-2 py-1 rounded ${getConvictionColor(localData.has_conviction || false)}`}>
+                    {localData.has_conviction ? "Да" : "Нет"}
+                  </span>
+                )}
+                {!isConvictionEditMode && (
+                  <button
+                    onClick={handleStartConvictionEdit}
+                    className="text-blue-600 hover:text-blue-800"
+                    title="Изменить наличие судимости"
+                  >
+                    <Edit size={14} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -249,13 +360,6 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
               </div>
             )}
 
-            {localData.has_conviction !== undefined && (
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Наличие судимости:</span>
-                <span>{localData.has_conviction ? "Да" : "Нет"}</span>
-              </div>
-            )}
-
             {localData.created_at && (
               <div className="flex justify-between items-center">
                 <span className="font-medium">Дата создания:</span>
@@ -266,32 +370,55 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
         </div>
 
         <div className="flex flex-col gap-3">
-          {isStatusEditMode ? (
-            <div className="flex gap-2">
-              <Button
-                variant="cube"
-                className="flex-1"
-                onClick={handleStatusUpdate}
-                disabled={statusLoading || !selectedStatus}
-              >
-                <Save size={16} className="mr-2" />
-                {statusLoading ? "Сохранение..." : "Сохранить статус"}
-              </Button>
-              <Button
-                variant="cube"
-                color="grey"
-                className="flex-1"
-                onClick={() => {
-                  setIsStatusEditMode(false);
-                  setSelectedStatus(normalizeStatusForDisplay(localData.status));
-                  clearStatusError();
-                  clearDeleteError();
-                }}
-                disabled={statusLoading}
-              >
-                <X size={16} className="mr-2" />
-                Отмена
-              </Button>
+          {(isStatusEditMode || isConvictionEditMode) ? (
+            <div className="space-y-3">
+              {isStatusEditMode && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="cube"
+                    className="flex-1"
+                    onClick={handleStatusUpdate}
+                    disabled={statusLoading || !selectedStatus}
+                  >
+                    <Save size={16} className="mr-2" />
+                    {statusLoading ? "Сохранение..." : "Сохранить статус"}
+                  </Button>
+                  <Button
+                    variant="cube"
+                    color="grey"
+                    className="flex-1"
+                    onClick={handleCancelStatusEdit}
+                    disabled={statusLoading}
+                  >
+                    <X size={16} className="mr-2" />
+                    Отмена
+                  </Button>
+                </div>
+              )}
+              
+              {isConvictionEditMode && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="cube"
+                    className="flex-1"
+                    onClick={handleConvictionUpdate}
+                    disabled={convictionLoading}
+                  >
+                    <Save size={16} className="mr-2" />
+                    {convictionLoading ? "Сохранение..." : "Сохранить"}
+                  </Button>
+                  <Button
+                    variant="cube"
+                    color="grey"
+                    className="flex-1"
+                    onClick={handleCancelConvictionEdit}
+                    disabled={convictionLoading}
+                  >
+                    <X size={16} className="mr-2" />
+                    Отмена
+                  </Button>
+                </div>
+              )}
             </div>
           ) : showDeleteConfirm ? (
             <div className="space-y-3">
@@ -330,13 +457,24 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
             </div>
           ) : (
             <>
-              <Button
-                variant="cube"
-                onClick={() => setIsStatusEditMode(true)}
-              >
-                <Edit size={16} className="mr-2" />
-                Изменить статус
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="cube"
+                  className="flex-1"
+                  onClick={handleStartStatusEdit}
+                >
+                  <Edit size={16} className="mr-2" />
+                  Изменить статус
+                </Button>
+                <Button
+                  variant="cube"
+                  className="flex-1"
+                  onClick={handleStartConvictionEdit}
+                >
+                  <Edit size={16} className="mr-2" />
+                  Изменить судимость
+                </Button>
+              </div>
 
               <div className="flex gap-2">
                 <Button

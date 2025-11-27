@@ -15,7 +15,7 @@ import { useCommissionMembers } from "@features/template-library/hooks/useCommis
 export const ComMembers = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
-  const { members, loading, error, deleteMember } = useCommissionMembers();
+  const { members, loading, error, deleteMember, refresh } = useCommissionMembers();
 
   const handleOpenModal = (member: any = null) => {
     setSelectedMember(member);
@@ -30,11 +30,14 @@ export const ComMembers = () => {
   const handleDeleteMember = async (memberId: string) => {
     if (confirm("Вы уверены, что хотите удалить этого члена комиссии?")) {
       await deleteMember(memberId);
+      // После удаления обновляем список
+      refresh();
     }
   };
 
+  // Функция для обновления списка после добавления члена комиссии
   const handleMemberAdded = () => {
-    console.log("Член комиссии добавлен");
+    refresh(); // Обновляем список членов комиссии
   };
 
   if (loading) {
@@ -125,10 +128,6 @@ export const ComMembers = () => {
           >
             Добавить
           </Button>
-
-          {/* <Button variant="ghost" className="w-full bg-neutral-300 text-black">
-            Раскрыть список
-          </Button> */}
         </div>
       </CardContent>
 

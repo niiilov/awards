@@ -1,5 +1,5 @@
 // features/commission/hooks/useCommissionMembers.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export interface CommissionMember {
   id: string;
@@ -21,8 +21,9 @@ export const useCommissionMembers = () => {
   const [members, setMembers] = useState<CommissionMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -57,7 +58,7 @@ export const useCommissionMembers = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const deleteMember = async (memberId: string) => {
     try {
@@ -81,7 +82,6 @@ export const useCommissionMembers = () => {
     try {
       const { api } = await import("@shared/api/axios");
       
-      // Отправляем только необходимые поля согласно API
       const requestData: AddMemberRequest = {
         full_name: memberData.full_name,
         position: memberData.position,
@@ -89,12 +89,12 @@ export const useCommissionMembers = () => {
       
       console.log('Отправка данных для создания члена комиссии:', requestData);
       
-      const response = await api.post("/commission-members", requestData);
+      const response = await api.post<CommissionMember>("/commission-members", requestData);
       
       console.log('Ответ от сервера при добавлении члена комиссии:', response);
       
-      // После успешного добавления обновляем список
-      await fetchMembers();
+      // Добавляем нового члена комиссии в локальное состояние
+      setMembers(prev => [...prev, response.data]);
       
       return response.data;
     } catch (err: any) {
@@ -109,9 +109,13 @@ export const useCommissionMembers = () => {
     }
   };
 
+  const refresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   useEffect(() => {
     fetchMembers();
-  }, []);
+  }, [fetchMembers, refreshTrigger]);
 
   return {
     members,
@@ -120,5 +124,6 @@ export const useCommissionMembers = () => {
     refetch: fetchMembers,
     deleteMember,
     addMember,
+    refresh,
   };
 };

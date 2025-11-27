@@ -15,7 +15,7 @@ import { useCommissionRoles } from "@features/template-library/hooks/useCommissi
 export const Roles = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<any>(null);
-  const { roles, loading, error, deleteRole } = useCommissionRoles();
+  const { roles, loading, error, deleteRole, refresh } = useCommissionRoles();
 
   const handleOpenModal = (role: any = null) => {
     setSelectedRole(role);
@@ -30,11 +30,14 @@ export const Roles = () => {
   const handleDeleteRole = async (roleId: string) => {
     if (confirm("Вы уверены, что хотите удалить эту роль?")) {
       await deleteRole(roleId);
+      // После удаления обновляем список
+      refresh();
     }
   };
 
+  // Функция для обновления списка после добавления роли
   const handleRoleAdded = () => {
-    console.log("Роль добавлена");
+    refresh(); // Обновляем список ролей
   };
 
   if (loading) {
@@ -129,10 +132,6 @@ export const Roles = () => {
           >
             Добавить
           </Button>
-
-          {/* <Button variant="ghost" className="w-full bg-neutral-300 text-black">
-            Раскрыть список
-          </Button> */}
         </div>
       </CardContent>
 

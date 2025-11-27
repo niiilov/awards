@@ -64,7 +64,7 @@ export const ComMembersModal: React.FC<OrderModalProps> = ({
 
       console.log("Член комиссии успешно добавлен");
 
-      // Вызываем колбэк если он передан
+      // Вызываем колбэк для обновления списка
       onMemberAdded?.();
       
       // Закрываем модалку
@@ -148,7 +148,7 @@ export const ComMembersModal: React.FC<OrderModalProps> = ({
           <Button 
             variant="outline" 
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || !lastName || !firstName || !position}
           >
             {loading ? "Сохранение..." : (data ? "Сохранить" : "Добавить")}
           </Button>

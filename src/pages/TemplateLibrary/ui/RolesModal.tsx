@@ -9,7 +9,7 @@ interface RolesModalProps {
   open: boolean;
   onClose: () => void;
   data?: any;
-  onRoleAdded?: () => void;
+  onRoleAdded?: () => void; // Добавляем колбэк
 }
 
 export const RolesModal: React.FC<RolesModalProps> = ({
@@ -25,11 +25,9 @@ export const RolesModal: React.FC<RolesModalProps> = ({
 
   useEffect(() => {
     if (data) {
-      // Если переданы данные для редактирования
       setSelectedRole(data.role || "");
       setSelectedMemberId(data.member_id || "");
     } else {
-      // Сброс полей при открытии модалки для добавления
       setSelectedRole("");
       setSelectedMemberId("");
     }
@@ -47,17 +45,17 @@ export const RolesModal: React.FC<RolesModalProps> = ({
         member_id: selectedMemberId,
       });
 
-      // Вызываем колбэк если он передан
+      // Вызываем колбэк после успешного добавления
       onRoleAdded?.();
       
-      // Закрываем модалку
       onClose();
+      setSelectedRole("");
+      setSelectedMemberId("");
     } catch (err) {
       console.error("Ошибка при добавлении роли:", err);
     }
   };
 
-  // Получаем выбранного члена комиссии для отображения информации
   const selectedMember = members.find(member => member.id === selectedMemberId);
 
   if (!open) return null;

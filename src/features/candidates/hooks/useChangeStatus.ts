@@ -19,7 +19,7 @@ export const useChangeStatus = () => {
         currentCandidate
       });
 
-      // Формируем полный объект кандидата с ВСЕМИ обязательными полями
+      // Формируем данные для обновления статуса
       const updateData = {
         id: candidateId,
         full_name: currentCandidate?.full_name || "",
@@ -27,7 +27,7 @@ export const useChangeStatus = () => {
         experience_total: currentCandidate?.experience_total || 0,
         experience_current: currentCandidate?.experience_current || 0,
         status: newStatus,
-        birth_date: currentCandidate?.birth_date || "",
+        birth_date: currentCandidate?.birth_date || null, // Используем null вместо пустой строки
         achievements: currentCandidate?.achievements || "",
         has_conviction: currentCandidate?.has_conviction || false,
         previous_awards: currentCandidate?.previous_awards || "",
@@ -35,9 +35,15 @@ export const useChangeStatus = () => {
         created_at: currentCandidate?.created_at || new Date().toISOString()
       };
 
+      // Обрабатываем birth_date - если пустая строка, устанавливаем null
+      if (updateData.birth_date === "") {
+        updateData.birth_date = null;
+      }
+
       console.log('Данные для обновления:', updateData);
 
-      const response = await api.put(`/candidates/${candidateId}`, updateData);
+      // Используем правильный эндпоинт для обновления статуса
+      const response = await api.put(`/candidates-status/${candidateId}`, updateData);
 
       console.log('Статус кандидата успешно изменен:', response.data);
       return response.data;

@@ -1,5 +1,5 @@
 // features/commission/hooks/useCommissionRoles.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export interface CommissionRole {
   id: string;
@@ -25,8 +25,9 @@ export const useCommissionRoles = () => {
   const [roles, setRoles] = useState<CommissionRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -41,7 +42,6 @@ export const useCommissionRoles = () => {
       if (response.data && Array.isArray(response.data.roles)) {
         rolesData = response.data.roles;
       } else if (Array.isArray(response.data)) {
-        // На случай если API вернет массив напрямую
         rolesData = response.data;
       } else {
         console.error('Неверный формат ответа от API:', response.data);
@@ -61,7 +61,7 @@ export const useCommissionRoles = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const deleteRole = async (roleId: string) => {
     try {
@@ -85,7 +85,6 @@ export const useCommissionRoles = () => {
     try {
       const { api } = await import("@shared/api/axios");
       
-      // Отправляем только необходимые поля согласно API
       const requestData: AddRoleRequest = {
         role: roleData.role,
         member_id: roleData.member_id,
@@ -108,9 +107,13 @@ export const useCommissionRoles = () => {
     }
   };
 
+  const refresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   useEffect(() => {
     fetchRoles();
-  }, []);
+  }, [fetchRoles, refreshTrigger]);
 
   return {
     roles,
@@ -119,5 +122,6 @@ export const useCommissionRoles = () => {
     refetch: fetchRoles,
     deleteRole,
     addRole,
+    refresh,
   };
 };
