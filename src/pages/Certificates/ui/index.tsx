@@ -107,7 +107,7 @@ export const Certificates = () => {
           {/* Выбор кандидата - используем обычный select */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-600">
-              Выберите кандидата {!selectedCandidateId && "(необязательно)"}
+              Выберите кандидата
             </label>
             <select
               value={selectedCandidateId}
@@ -127,7 +127,7 @@ export const Certificates = () => {
             )}
             {!selectedCandidateId && (
               <span className="text-xs text-gray-500">
-                Можно выбрать кандидата для автозаполнения или ввести данные вручную
+                Выберите кандидата для автозаполнения
               </span>
             )}
           </div>

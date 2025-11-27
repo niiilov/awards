@@ -11,9 +11,8 @@ export const Sidebar = ({ className }: SidebarProps) => {
   return (
     <aside className={clsx(className, " h-fit mr-4 p-4")}>
       <nav className="flex flex-col max-w-[300px] w-full gap-2 text-base border border-gray-200 rounded-xl p-2">
-        <div className="flex flex-col ml-8 gap-1">
+        <div className="flex flex-col ml-8 gap-1  mb-2 mt-2">
           <span className="font-semibold text-xl">Дашборд</span>
-          <span className="font-medium text-[#AAAAAA]">Панель действий</span>
         </div>
         <Link
           to="/dashboard"

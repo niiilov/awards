@@ -14,6 +14,7 @@ export const useUploadedFiles = () => {
   const [files, setFiles] = useState<UploadedFileInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const fetchUploadedFiles = async () => {
     try {
@@ -37,6 +38,7 @@ export const useUploadedFiles = () => {
       
       console.log('Извлеченные файлы:', filesData);
       setFiles(filesData);
+      setHasFetched(true);
       
     } catch (err: any) {
       console.error("Ошибка загрузки списка файлов:", err);
@@ -45,6 +47,7 @@ export const useUploadedFiles = () => {
         "Не удалось загрузить список файлов. Пожалуйста, попробуйте позже."
       );
       setFiles([]);
+      setHasFetched(true);
     } finally {
       setLoading(false);
     }
@@ -68,37 +71,12 @@ export const useUploadedFiles = () => {
     }
   };
 
-  const downloadFile = async (filename: string) => {
-    try {
-      const { api } = await import("@shared/api/axios");
-      const response = await api.get(`/uploaded-files/${encodeURIComponent(filename)}/download`, {
-        responseType: 'blob'
-      });
-      
-      // Создаем ссылку для скачивания
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      
-      return true;
-    } catch (err: any) {
-      console.error("Ошибка при скачивании файла:", err);
-      setError(
-        err.response?.data?.message || 
-        "Не удалось скачать файл. Пожалуйста, попробуйте позже."
-      );
-      return false;
-    }
-  };
-
+  // Загружаем файлы только при первом монтировании
   useEffect(() => {
-    fetchUploadedFiles();
-  }, []);
+    if (!hasFetched) {
+      fetchUploadedFiles();
+    }
+  }, [hasFetched]);
 
   return {
     files,
@@ -106,7 +84,6 @@ export const useUploadedFiles = () => {
     error,
     refetch: fetchUploadedFiles,
     deleteFile,
-    downloadFile,
   };
 };
 

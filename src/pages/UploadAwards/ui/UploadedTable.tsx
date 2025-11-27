@@ -9,13 +9,23 @@ import {
 } from "@shared/ui/table";
 import { Button } from "@shared/ui/button";
 import { useUploadedFiles } from "@features/upload-awards/hooks/useUploadedFiles";
+import { useEffect, useRef } from "react";
 
 interface UploadedTableProps {
-  onFileSelect?: (filename: string) => void;
+  refreshTrigger?: number;
 }
 
-export const UploadedTable = ({  }: UploadedTableProps) => {
-  const { files, loading, error, deleteFile, downloadFile, refetch } = useUploadedFiles();
+export const UploadedTable = ({ refreshTrigger = 0 }: UploadedTableProps) => {
+  const { files, loading, error, deleteFile, refetch } = useUploadedFiles();
+  const previousRefreshTrigger = useRef(refreshTrigger);
+
+  // Автоматически обновляем список файлов только когда refreshTrigger увеличивается
+  useEffect(() => {
+    if (refreshTrigger > previousRefreshTrigger.current) {
+      refetch();
+      previousRefreshTrigger.current = refreshTrigger;
+    }
+  }, [refreshTrigger, refetch]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -45,14 +55,7 @@ export const UploadedTable = ({  }: UploadedTableProps) => {
     }
   };
 
-  const handleDownload = async (filename: string) => {
-    const success = await downloadFile(filename);
-    if (success) {
-      console.log(`Файл "${filename}" успешно скачан`);
-    }
-  };
-
-  if (loading) {
+  if (loading && files.length === 0) {
     return (
       <Card className="border-none w-full p-0 shadow-none">
         <CardHeader className="w-full p-0">
@@ -69,7 +72,7 @@ export const UploadedTable = ({  }: UploadedTableProps) => {
     );
   }
 
-  if (error) {
+  if (error && files.length === 0) {
     return (
       <Card className="border-none w-full p-0 shadow-none">
         <CardHeader className="w-full p-0">
@@ -96,17 +99,6 @@ export const UploadedTable = ({  }: UploadedTableProps) => {
   return (
     <Card className="border-none w-full p-0 shadow-none">
       <CardHeader className="w-full p-0">
-        <div className="flex items-center justify-between w-full">
-          <CardTitle className="text-xl font-bold">Загруженные файлы</CardTitle>
-          <Button 
-            onClick={refetch}
-            variant="outline" 
-            size="sm"
-            disabled={loading}
-          >
-            Обновить
-          </Button>
-        </div>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
@@ -140,17 +132,9 @@ export const UploadedTable = ({  }: UploadedTableProps) => {
                     {formatDate(file.uploaded_at)}
                   </TableCell>
                   <TableCell className="text-center">
-                    <div className="flex justify-center gap-2">
+                    <div className="flex justify-center">
                       <Button
-                      variant="cube"
-                        size="sm"
-                        onClick={() => handleDownload(file.name)}
-                        disabled={loading}
-                      >
-                        Скачать
-                      </Button>
-                      <Button
-                      variant="cube"
+                        variant="cube"
                         color="grey"
                         onClick={() => handleDelete(file.name)}
                         disabled={loading}
@@ -164,6 +148,11 @@ export const UploadedTable = ({  }: UploadedTableProps) => {
             )}
           </TableBody>
         </Table>
+        {loading && files.length > 0 && (
+          <div className="flex justify-center items-center py-4">
+            Обновление списка файлов...
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -7,6 +7,7 @@ import { useUploadFile } from "@features/upload-awards/hooks/useUploadFile";
 
 export const UploadAwards = () => {
   const [dragActive, setDragActive] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const {
@@ -59,7 +60,20 @@ export const UploadAwards = () => {
     const dataTransfer = new DataTransfer();
     validFiles.forEach(file => dataTransfer.items.add(file));
     
-    await uploadMultipleFiles(dataTransfer.files);
+    try {
+      // Загружаем файлы
+      await uploadMultipleFiles(dataTransfer.files);
+      
+      // Обновляем таблицу после загрузки
+      setRefreshTrigger(prev => prev + 1);
+      
+      // Очищаем input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке файлов:', error);
+    }
   };
 
   const handleBrowseClick = () => {
@@ -141,7 +155,7 @@ export const UploadAwards = () => {
 
           {/* Таблица загруженных файлов */}
           <div className="min-w-full flex pb-2 gap-6 overflow-x-auto flex-nowrap">
-            <UploadedTable />
+            <UploadedTable refreshTrigger={refreshTrigger} />
           </div>
         </div>
       </main>
