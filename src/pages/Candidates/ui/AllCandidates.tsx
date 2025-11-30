@@ -1,6 +1,6 @@
-import { useState } from "react";
+// AllCandidates.tsx
+import { useState, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@shared/ui/card";
-import { OrderModal } from "@shared/ui/orders";
 import {
   Table,
   TableHeader,
@@ -9,97 +9,109 @@ import {
   TableBody,
   TableCell,
 } from "@shared/ui/table";
+import { Link } from "react-router-dom";
 import { useCandidates } from "@features/candidates/hooks/useCandidates";
-import type { Candidate } from "@features/candidates/api/types";
+import type { Candidate } from "@features/candidates/hooks/useCandidates";
+import { CandidatesModal } from "./CandidatesModal";
 
-export const AllCandidates = () => {
-  const [orderModalOpen, setOrderModalOpen] = useState(false);
+interface AllCandidatesProps {
+  maxVisibleRows?: number;
+  showMoreButton?: boolean;
+  searchQuery?: string;
+  statusFilter?: string;
+}
+
+export const AllCandidates = ({ 
+  maxVisibleRows, 
+  showMoreButton = false,
+  searchQuery = "",
+  statusFilter = ""
+}: AllCandidatesProps) => {
+  const [modalOpen, setModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-  const { candidates, loading, error, updateCandidateStatus } = useCandidates();
+  const { candidates, loading, error, updateCandidateStatus, refetch } = useCandidates();
 
-  // Гарантируем, что candidatesToRender всегда массив
-  const candidatesToRender = Array.isArray(candidates) ? candidates : [];
+  // Фильтрация кандидатов
+  const filteredCandidates = useMemo(() => {
+    let filtered = candidates;
 
-  console.log('candidates в компоненте:', candidates);
-  console.log('candidatesToRender:', candidatesToRender);
-  console.log('Is Array?', Array.isArray(candidates));
+    // Фильтр по поиску ФИО
+    if (searchQuery) {
+      filtered = filtered.filter(candidate =>
+        candidate.full_name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Фильтр по статусу
+    if (statusFilter) {
+      filtered = filtered.filter(candidate => candidate.status === statusFilter);
+    }
+
+    return filtered;
+  }, [candidates, searchQuery, statusFilter]);
+
+  const displayedCandidates = maxVisibleRows 
+    ? filteredCandidates.slice(0, maxVisibleRows)
+    : filteredCandidates;
 
   const handleRowClick = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
-    setOrderModalOpen(true);
+    setModalOpen(true);
   };
 
-  const handleCloseOrderModal = () => {
-    setOrderModalOpen(false);
+  const handleCloseModal = () => {
+    setModalOpen(false);
     setSelectedCandidate(null);
   };
 
-  const handleStatusChange = (id: string | number, newStatus: string) => {
-    if (selectedCandidate) {
-      updateCandidateStatus(id.toString(), newStatus);
+  const handleStatusChange = (id: string, newStatus: string) => {
+    updateCandidateStatus(id, newStatus);
+    if (selectedCandidate && selectedCandidate.id === id) {
       setSelectedCandidate({ ...selectedCandidate, status: newStatus });
     }
   };
 
-  const handleOpenUploadModal = () => {
-    console.log("Открыть модалку загрузки файла");
+  const handleCandidateDelete = (candidateId: string) => {
+    refetch();
+    if (selectedCandidate && selectedCandidate.id === candidateId) {
+      handleCloseModal();
+    }
   };
 
-  // Функция для преобразования Candidate в TableRowData
-  const convertCandidateToTableRowData = (candidate: Candidate) => {
-    return {
-      number: candidate.id,
-      applicant: candidate.full_name,
-      urgency: "Стандартная",
-      date: candidate.created_at || new Date().toISOString(),
-      ...candidate
-    };
-  };
-
-  // Функция для форматирования стажа
   const formatExperience = (years: number) => {
-    if (!years && years !== 0) return "Не указан";
+    if (years === null || years === undefined) return "Не указан";
     if (years === 0) return "Менее года";
     if (years === 1) return "1 год";
     if (years >= 2 && years <= 4) return `${years} года`;
     return `${years} лет`;
   };
 
-  // Функция для определения цвета статуса
   const getStatusColor = (status: string) => {
     if (!status) return "text-gray-600";
     
-    switch (status.toLowerCase()) {
-      case "approved":
-      case "одобрено":
-      case "прошел":
-        return "text-green-600";
-      case "rejected":
-      case "отклонено":
-      case "не прошел":
-        return "text-red-600";
-      case "pending":
-      case "рассмотрение":
-        return "text-yellow-600";
-      default:
-        return "text-gray-600";
-    }
+    const normalizedStatus = normalizeStatus(status);
+    return normalizedStatus === "Прошел" ? "text-green-600" : "text-red-600";
   };
 
-  // Функция для перевода статуса
-  const translateStatus = (status: string) => {
-    if (!status) return "Не указан";
+  const normalizeStatus = (status: string) => {
+    if (!status) return "Не прошел";
     
-    switch (status.toLowerCase()) {
-      case "approved":
-        return "Одобрено";
-      case "rejected":
-        return "Отклонено";
-      case "pending":
-        return "На рассмотрении";
-      default:
-        return status;
+    const statusLower = status.toLowerCase().trim();
+    if (
+      statusLower === "прошел" || 
+      statusLower === "прошёл" || 
+      statusLower === "passed" || 
+      statusLower === "approved" ||
+      statusLower === "одобрено"
+    ) {
+      return "Прошел";
     }
+    return "Не прошел";
+  };
+
+  const formatFullName = (fullName: string) => {
+    if (!fullName) return "Не указано";
+    return fullName.replace(/\s+/g, ' ').trim();
   };
 
   if (loading) {
@@ -140,7 +152,9 @@ export const AllCandidates = () => {
     <Card className="border-none w-full p-0 shadow-none">
       <CardHeader className="w-full p-0">
         <div className="flex items-center justify-between w-full">
-          <CardTitle className="text-xl font-bold">Все кандидаты</CardTitle>
+          <CardTitle className="text-xl font-bold">
+            Все кандидаты {filteredCandidates.length > 0 && `(${filteredCandidates.length})`}
+          </CardTitle>
         </div>
       </CardHeader>
 
@@ -156,21 +170,21 @@ export const AllCandidates = () => {
           </TableHeader>
 
           <TableBody>
-            {candidatesToRender.length === 0 ? (
+            {displayedCandidates.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8">
-                  Кандидаты не найдены
+                  {searchQuery || statusFilter ? "Кандидаты не найдены по заданным фильтрам" : "Кандидаты не найдены"}
                 </TableCell>
               </TableRow>
             ) : (
-              candidatesToRender.map((candidate) => (
+              displayedCandidates.map((candidate) => (
                 <TableRow
                   key={candidate.id}
                   onClick={() => handleRowClick(candidate)}
                   className="cursor-pointer hover:bg-blue-100 transition"
                 >
                   <TableCell className="text-center">
-                    {candidate.full_name || "Не указано"}
+                    {formatFullName(candidate.full_name)}
                   </TableCell>
                   <TableCell className="text-center">
                     {candidate.position || "Не указана"}
@@ -179,22 +193,33 @@ export const AllCandidates = () => {
                     {formatExperience(candidate.experience_total)}
                   </TableCell>
                   <TableCell className={`text-center ${getStatusColor(candidate.status)}`}>
-                    {translateStatus(candidate.status)}
+                    {normalizeStatus(candidate.status)}
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
+
+        {showMoreButton && filteredCandidates.length > (maxVisibleRows || 0) && (
+          <div className="text-center py-4">
+            <Link
+              to="/candidates"
+              className="text-gray-500 hover:underline cursor-pointer"
+            >
+              Показать больше...
+            </Link>
+          </div>
+        )}
       </CardContent>
 
       {selectedCandidate && (
-        <OrderModal
-          open={orderModalOpen}
-          onClose={handleCloseOrderModal}
-          data={convertCandidateToTableRowData(selectedCandidate)}
+        <CandidatesModal
+          open={modalOpen}
+          onClose={handleCloseModal}
+          data={selectedCandidate}
           onStatusChange={handleStatusChange}
-          onOpenUploadModal={handleOpenUploadModal}
+          onCandidateDelete={handleCandidateDelete}
         />
       )}
     </Card>

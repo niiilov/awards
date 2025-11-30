@@ -1,8 +1,6 @@
 import { Sidebar } from "@shared/ui/sidebar";
-import React from "react";
 import { Roles } from "./Roles";
 import { ComMembers } from "./ComMembers";
-import { RolesModal } from "./RolesModal";
 
 export const TemplateLibrary = () => {
   return (

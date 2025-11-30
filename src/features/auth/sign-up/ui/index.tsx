@@ -16,6 +16,8 @@ export const SignUpForm = () => {
   const {
     username,
     setUsername,
+    email,
+    setEmail,
     password,
     setPassword,
     confirmPassword,
@@ -69,6 +71,7 @@ export const SignUpForm = () => {
           </div>
           <h2>Регистрация</h2>
           
+          {/* ФИО - дополнительное поле (не отправляется на сервер) */}
           <InputWithLabel
             label="ФИО (полностью)"
             type="text"
@@ -77,17 +80,27 @@ export const SignUpForm = () => {
             onChange={(e) => setFullName(e.target.value)}
           />
           
+          {/* Обязательные поля согласно NewUserRequest */}
           <InputWithLabel
-            label="Логин"
+            label="Логин *"
             type="text"
             placeholder="Введите логин"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
           />
+
+          <InputWithLabel
+            label="Email *"
+            type="email"
+            placeholder="Введите email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
           
           <InputWithLabel
-            label="Пароль"
+            label="Пароль *"
             type="password"
             placeholder="Введите пароль"
             value={password}
@@ -96,7 +109,7 @@ export const SignUpForm = () => {
           />
           
           <InputWithLabel
-            label="Повторить пароль"
+            label="Повторить пароль *"
             type="password"
             placeholder="Введите пароль еще раз"
             value={confirmPassword}
@@ -111,6 +124,10 @@ export const SignUpForm = () => {
           >
             {loading ? "Регистрация..." : "Зарегистрироваться"}
           </Button>
+          
+          <span className="text-sm text-gray-600">
+            * - обязательные поля
+          </span>
           
           <span>
             Уже есть аккаунт?{" "}

@@ -3,13 +3,13 @@ import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
 import { ChevronDown } from "lucide-react";
 import { useClickOutside } from "@shared/hooks/useClickOutside";
-import type { User } from "@features/auth/api/types";
 
 interface UserDropdownProps {
   children: string;
+  onLogout: () => void;
 }
 
-export const UserDropdown = ({ children }: UserDropdownProps) => {
+export const UserDropdown = ({ children, onLogout }: UserDropdownProps) => {
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -28,6 +28,11 @@ export const UserDropdown = ({ children }: UserDropdownProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(dropdownRef, () => setOpen(false));
+
+  const handleLogout = () => {
+    setOpen(false);
+    onLogout(); // Вызываем переданную функцию выхода
+  };
 
   return (
     <div ref={dropdownRef} className="relative">
@@ -59,7 +64,7 @@ export const UserDropdown = ({ children }: UserDropdownProps) => {
             </Link>
           ) : (
             <Link
-              to="/dashborard"
+              to="/dashboard" // Исправлена опечатка: было "/dashborard"
               onClick={() => setOpen(false)}
               className="font-semibold text-sm px-6 py-2 hover:bg-[#CADDFF] rounded-sm w-40"
             >
@@ -67,7 +72,7 @@ export const UserDropdown = ({ children }: UserDropdownProps) => {
             </Link>
           )}
           <button
-            onClick={() => setOpen(false)}
+            onClick={handleLogout}
             className="font-semibold text-start cursor-pointer text-sm px-6 py-2 hover:bg-[#CADDFF] rounded-sm w-40"
           >
             Выйти

@@ -1,5 +1,6 @@
 // features/candidates/hooks/useCandidates.ts
 import { useState, useEffect } from "react";
+import { useChangeStatus } from "./useChangeStatus";
 
 export interface Candidate {
   id: string;
@@ -16,10 +17,50 @@ export interface Candidate {
   created_at: string;
 }
 
+interface CandidatesResponse {
+  candidates: Candidate[] | null;
+}
+
+// Интерфейс для данных из базы
+interface DBCandidate {
+  id: string;
+  full_name: string;
+  birth_date: string;
+  position: string;
+  experience_total: number;
+  experience_current: number;
+  achievements: string;
+  has_conviction: boolean;
+  previous_awards: string;
+  status: string;
+  reason: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useCandidates = () => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { changeCandidateStatus, loading: changeLoading, error: changeError } = useChangeStatus();
+
+  // Функция для преобразования данных из базы в формат фронтенда
+  const transformCandidateFromDB = (dbCandidate: DBCandidate): Candidate => {
+    return {
+      id: dbCandidate.id,
+      full_name: dbCandidate.full_name,
+      position: dbCandidate.position,
+      experience_total: dbCandidate.experience_total,
+      experience_current: dbCandidate.experience_current,
+      status: dbCandidate.status,
+      birth_date: dbCandidate.birth_date,
+      achievements: dbCandidate.achievements,
+      has_conviction: dbCandidate.has_conviction,
+      previous_awards: dbCandidate.previous_awards,
+      reason: dbCandidate.reason,
+      created_at: dbCandidate.created_at
+    };
+  };
 
   const fetchCandidates = async () => {
     try {
@@ -27,24 +68,38 @@ export const useCandidates = () => {
       setError(null);
       
       const { api } = await import("@shared/api/axios");
-      const response = await api.get("/candidates");
+      const response = await api.get<CandidatesResponse>("/candidates");
       
-      console.log('=== Ответ от API /candidates ===', response);
-      console.log('Тип данных:', typeof response.data);
-      console.log('Is Array?', Array.isArray(response.data));
-      console.log('Данные:', response.data);
+      console.log('=== Ответ от API /candidates ===', response.data);
       
-      // Гарантируем, что candidates всегда массив
       let candidatesData: Candidate[] = [];
       
-      if (Array.isArray(response.data)) {
-        candidatesData = response.data;
+      if (response.data && response.data.candidates && Array.isArray(response.data.candidates)) {
+        // Если API возвращает данные в правильном формате
+        candidatesData = response.data.candidates;
+      } else if (response.data && Array.isArray(response.data)) {
+        // Если API возвращает массив напрямую (альтернативный формат)
+        candidatesData = response.data.map(transformCandidateFromDB);
+      } else if (response.data && typeof response.data === 'object') {
+        // Если API возвращает объект с данными кандидатов
+        // Пробуем найти массив кандидатов в ответе
+        const data = response.data as any;
+        
+        // Ищем первый массив в ответе
+        const candidatesArray = Object.values(data).find((value: any) => Array.isArray(value)) as DBCandidate[] | undefined;
+        
+        if (candidatesArray) {
+          candidatesData = candidatesArray.map(transformCandidateFromDB);
+        } else {
+          console.log('API вернул объект без массива кандидатов, используем пустой массив');
+          candidatesData = [];
+        }
       } else {
-        console.error('Ожидался массив, но получен:', typeof response.data, response.data);
+        console.error('Неверный формат ответа от API:', response.data);
         candidatesData = [];
       }
       
-      console.log('Обработанные данные:', candidatesData);
+      console.log('Извлеченные кандидаты:', candidatesData);
       setCandidates(candidatesData);
       
     } catch (err: any) {
@@ -53,36 +108,48 @@ export const useCandidates = () => {
         err.response?.data?.message || 
         "Не удалось загрузить список кандидатов. Пожалуйста, попробуйте позже."
       );
-      // Гарантируем, что даже при ошибке candidates - массив
       setCandidates([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const updateCandidateStatus = async (candidateId: string, newStatus: string) => {
+    try {
+      // Обновляем статус через API
+      await changeCandidateStatus(candidateId, newStatus);
+      
+      // Обновляем локальное состояние
+      setCandidates(prev => 
+        prev.map(candidate => 
+          candidate.id === candidateId 
+            ? { ...candidate, status: newStatus }
+            : candidate
+        )
+      );
+      
+      return true;
+    } catch (err) {
+      console.error("Ошибка при обновлении статуса в локальном состоянии:", err);
+      return false;
+    }
+  };
+
+  const deleteCandidate = (candidateId: string) => {
+    // Локальное удаление кандидата из состояния
+    setCandidates(prev => prev.filter(candidate => candidate.id !== candidateId));
+  };
+
   useEffect(() => {
     fetchCandidates();
   }, []);
 
-  const updateCandidateStatus = (candidateId: string, newStatus: string) => {
-    setCandidates(prev => {
-      if (!Array.isArray(prev)) {
-        console.error('candidates не является массивом в updateCandidateStatus:', prev);
-        return [];
-      }
-      return prev.map(candidate => 
-        candidate.id === candidateId 
-          ? { ...candidate, status: newStatus }
-          : candidate
-      );
-    });
-  };
-
   return {
     candidates,
-    loading,
-    error,
+    loading: loading || changeLoading,
+    error: error || changeError,
     refetch: fetchCandidates,
     updateCandidateStatus,
+    deleteCandidate,
   };
 };

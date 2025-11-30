@@ -10,27 +10,75 @@ import {
   TableCell,
 } from "@shared/ui/table";
 import { ComMembersModal } from "./ComMembersModal";
+import { useCommissionMembers } from "@features/template-library/hooks/useCommissionMembers";
 
 export const ComMembers = () => {
-  // --- Модалка ---
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProtocol, setSelectedProtocol] = useState(null);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const { members, loading, error, deleteMember, refresh } = useCommissionMembers();
 
-  const handleOpenModal = (data: any = null) => {
-    setSelectedProtocol(data);
+  const handleOpenModal = (member: any = null) => {
+    setSelectedMember(member);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedProtocol(null);
+    setSelectedMember(null);
   };
+
+  const handleDeleteMember = async (memberId: string) => {
+    if (confirm("Вы уверены, что хотите удалить этого члена комиссии?")) {
+      await deleteMember(memberId);
+      // После удаления обновляем список
+      refresh();
+    }
+  };
+
+  // Функция для обновления списка после добавления члена комиссии
+  const handleMemberAdded = () => {
+    refresh(); // Обновляем список членов комиссии
+  };
+
+  if (loading) {
+    return (
+      <Card className="border-none w-full p-0 shadow-none">
+        <CardHeader className="w-full p-0">
+          <div className="flex items-center justify-between w-full">
+            <CardTitle className="text-xl font-bold">Члены комиссии</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="flex justify-center items-center py-8">
+            Загрузка членов комиссии...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="border-none w-full p-0 shadow-none">
+        <CardHeader className="w-full p-0">
+          <div className="flex items-center justify-between w-full">
+            <CardTitle className="text-xl font-bold">Члены комиссии</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="flex justify-center items-center py-8 text-red-600">
+            {error}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-none w-full p-0 shadow-none">
       <CardHeader className="w-full p-0">
         <div className="flex items-center justify-between w-full">
-          <CardTitle className="text-xl font-bold">Роли</CardTitle>
+          <CardTitle className="text-xl font-bold">Члены комиссии</CardTitle>
         </div>
       </CardHeader>
 
@@ -38,47 +86,37 @@ export const ComMembers = () => {
         <Table>
           <TableHeader>
             <TableRow className="bg-[#CADDFF]">
-              <TableHead className="text-center text-[#6C6C6E] cursor-pointer hover:bg-blue-200 transition"></TableHead>
-              <TableHead className="text-[#6C6C6E] cursor-pointer hover:bg-blue-200 transition">
-                <div className="flex items-center gap-1">ФИО</div>
-              </TableHead>
-              <TableHead className="text-[#6C6C6E] cursor-pointer hover:bg-blue-200 transition">
-                <div className="flex items-center gap-1">Должность</div>
-              </TableHead>
-              <TableHead className="text-[#6C6C6E] cursor-pointer hover:bg-blue-200 transition">
-                <div className="flex items-center gap-1">Действия</div>
-              </TableHead>
+              <TableHead className="text-center text-[#6C6C6E]">ФИО</TableHead>
+              <TableHead className="text-[#6C6C6E]">Должность</TableHead>
+              <TableHead className="text-[#6C6C6E]">Действия</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            <TableRow>
-              <TableCell className="text-center">
-                Иванов Иван Иванович
-              </TableCell>
-              <TableCell>Заместитель главы администрации района</TableCell>
-              <TableCell className="text-red-500 cursor-pointer">
-                Удалить
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell className="text-center">
-                Иванов Иван Иванович
-              </TableCell>
-              <TableCell>Заместитель главы администрации района</TableCell>
-              <TableCell className="text-red-500 cursor-pointer">
-                Удалить
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell className="text-center">
-                Иванов Иван Иванович
-              </TableCell>
-              <TableCell>Заместитель главы администрации района</TableCell>
-              <TableCell className="text-red-500 cursor-pointer">
-                Удалить
-              </TableCell>
-            </TableRow>
+            {members.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center py-8">
+                  Члены комиссии не найдены
+                </TableCell>
+              </TableRow>
+            ) : (
+              members.map((member) => (
+                <TableRow key={member.id}>
+                  <TableCell className="text-center">
+                    {member.full_name}
+                  </TableCell>
+                  <TableCell>{member.position}</TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => handleDeleteMember(member.id)}
+                      className="text-red-500 hover:text-red-700 cursor-pointer transition"
+                    >
+                      Удалить
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
 
@@ -90,18 +128,14 @@ export const ComMembers = () => {
           >
             Добавить
           </Button>
-
-          <Button variant="ghost" className="w-full bg-neutral-300 text-black">
-            Раскрыть список
-          </Button>
         </div>
       </CardContent>
 
-      {/* --- Модалка --- */}
       <ComMembersModal
         open={isModalOpen}
         onClose={handleCloseModal}
-        data={selectedProtocol}
+        data={selectedMember}
+        onMemberAdded={handleMemberAdded}
       />
     </Card>
   );

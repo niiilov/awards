@@ -1,29 +1,21 @@
 import { Button } from "@shared/ui/button";
-import { Input } from "@shared/ui/input";
 import { Sidebar } from "@shared/ui/sidebar";
 import { useState, useRef } from "react";
 import SendIcon from "../assets/Icon.svg";
 import { UploadedTable } from "./UploadedTable";
-
-interface UploadedFile {
-  id: string;
-  name: string;
-  status: "Загружен" | "Ошибка" | "Загрузка";
-  size?: string;
-  date?: string;
-}
+import { useUploadFile } from "@features/upload-awards/hooks/useUploadFile";
 
 export const UploadAwards = () => {
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([
-    { id: "1", name: "nagradnoy_list.docx", status: "Загружен" },
-    { id: "2", name: "nagradnoy_list.docx", status: "Загружен" },
-    { id: "3", name: "nagradnoy_list.docx", status: "Загружен" },
-    { id: "4", name: "nagradnoy_list.docx", status: "Загружен" },
-    { id: "5", name: "nagradnoy_list.docx", status: "Загружен" },
-  ]);
-
   const [dragActive, setDragActive] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const {
+    loading: uploadLoading,
+    error: uploadError,
+    uploadMultipleFiles,
+    clearError
+  } = useUploadFile();
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -52,45 +44,40 @@ export const UploadAwards = () => {
     }
   };
 
-  const handleFiles = (files: FileList) => {
-    const newFiles: UploadedFile[] = [];
-
-    Array.from(files).forEach((file, index) => {
-      // Проверяем формат файла
+  const handleFiles = async (files: FileList) => {
+    // Проверяем форматы файлов
+    const validFiles = Array.from(files).filter(file => {
       const fileExtension = file.name.split(".").pop()?.toLowerCase();
-      const isValidFormat = fileExtension === "pdf" || fileExtension === "docx";
-
-      newFiles.push({
-        id: Date.now() + index.toString(),
-        name: file.name,
-        status: isValidFormat ? "Загружен" : "Ошибка",
-        size: formatFileSize(file.size),
-        date: new Date().toLocaleDateString("ru-RU"),
-      });
+      return fileExtension === "pdf" || fileExtension === "docx";
     });
 
-    setUploadedFiles((prev) => [...prev, ...newFiles]);
-  };
+    if (validFiles.length === 0) {
+      alert("Пожалуйста, выберите файлы формата PDF или DOCX");
+      return;
+    }
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const handleDeleteFile = (id: string) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+    // Создаем новый FileList с валидными файлами
+    const dataTransfer = new DataTransfer();
+    validFiles.forEach(file => dataTransfer.items.add(file));
+    
+    try {
+      // Загружаем файлы
+      await uploadMultipleFiles(dataTransfer.files);
+      
+      // Обновляем таблицу после загрузки
+      setRefreshTrigger(prev => prev + 1);
+      
+      // Очищаем input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке файлов:', error);
+    }
   };
 
   const handleBrowseClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleShowMore = () => {
-    // Логика для загрузки дополнительных файлов
-    console.log("Загружаем больше файлов...");
   };
 
   return (
@@ -114,7 +101,7 @@ export const UploadAwards = () => {
               dragActive
                 ? "border-blue-600 bg-blue-100"
                 : "border-blue-500 bg-blue-50"
-            }`}
+            } ${uploadLoading ? "opacity-50 cursor-not-allowed" : ""}`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -127,17 +114,33 @@ export const UploadAwards = () => {
                 alt=""
               />
               <p className="text-bold">
-                Переместите файлы или выберите их в "Обзоре"
+                {uploadLoading ? "Загрузка файлов..." : "Переместите файлы или выберите их в \"Обзоре\""}
               </p>
               <p className="text-sm text-gray-500">Формат: pdf, docx</p>
               <Button
                 onClick={handleBrowseClick}
-                className="bg-blue-600 hover:bg-blue-700 rounded-[8px] px-4 py-1 hover:text-white text-white"
+                disabled={uploadLoading}
+                className="bg-blue-600 hover:bg-blue-700 rounded-[8px] px-4 py-1 hover:text-white text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Обзор
+                {uploadLoading ? "Загрузка..." : "Обзор"}
               </Button>
             </div>
           </div>
+
+          {/* Отображение ошибок загрузки */}
+          {uploadError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="text-red-800 text-sm">{uploadError}</div>
+              <Button 
+                onClick={clearError}
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+              >
+                Закрыть
+              </Button>
+            </div>
+          )}
 
           {/* Скрытый input */}
           <input
@@ -147,11 +150,12 @@ export const UploadAwards = () => {
             accept=".pdf,.docx"
             onChange={handleChange}
             className="hidden"
+            disabled={uploadLoading}
           />
 
-          {/* Разделитель */}
+          {/* Таблица загруженных файлов */}
           <div className="min-w-full flex pb-2 gap-6 overflow-x-auto flex-nowrap">
-            <UploadedTable />
+            <UploadedTable refreshTrigger={refreshTrigger} />
           </div>
         </div>
       </main>
