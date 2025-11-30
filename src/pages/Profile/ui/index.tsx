@@ -28,9 +28,9 @@ export const Profile = observer(() => {
   // Если пользователь еще не загружен
   if (!user) {
     return (
-      <div className="flex min-h-screen w-full max-w-[1440px] mt-20 bg-white">
+      <div className="flex min-h-screen w-full max-w-[1440px] bg-white">
         <Sidebar className="hidden lg:block" />
-        <main className="flex-1 border-l border-gray-200 mt-10 px-6 space-y-6">
+        <main className="flex-1 border-l border-gray-200 px-6 space-y-6">
           <div className="max-w-2xl p-2">
             <div className="text-center py-8">
               Загрузка данных пользователя...
@@ -42,9 +42,9 @@ export const Profile = observer(() => {
   }
 
   return (
-    <div className="flex min-h-screen w-full max-w-[1440px] mt-20 bg-white">
+    <div className="flex min-h-screen w-full max-w-[1440px] bg-white">
       <Sidebar className="hidden lg:block" />
-      <main className="flex-1 border-l border-gray-200 mt-10 px-6 space-y-6">
+      <main className="flex-1 border-l border-gray-200 px-6 space-y-6">
         <div className="max-w-2xl p-2">
           <Card className="space-y-1 border-none shadow-none">
             <CardHeader>
@@ -71,11 +71,7 @@ export const Profile = observer(() => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="id">ID пользователя</Label>
-                <Input
-                  id="id"
-                  defaultValue={user.id || "Не указан"}
-                  readOnly
-                />
+                <Input id="id" defaultValue={user.id || "Не указан"} readOnly />
               </div>
             </CardContent>
           </Card>
