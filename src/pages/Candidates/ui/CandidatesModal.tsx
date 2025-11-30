@@ -30,26 +30,42 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
   const [selectedConviction, setSelectedConviction] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const { updateCandidateStatus, loading: statusLoading, error: statusError, clearError: clearStatusError } = useUpdateCandidateStatus();
-  const { updateCandidateConviction, loading: convictionLoading, error: convictionError, clearError: clearConvictionError } = useUpdateCandidateConviction();
-  const { deleteCandidate: deleteCandidateApi, loading: deleteLoading, error: deleteError, clearError: clearDeleteError } = useDeleteCandidate();
+  const {
+    updateCandidateStatus,
+    loading: statusLoading,
+    error: statusError,
+    clearError: clearStatusError,
+  } = useUpdateCandidateStatus();
+  const {
+    updateCandidateConviction,
+    loading: convictionLoading,
+    error: convictionError,
+    clearError: clearConvictionError,
+  } = useUpdateCandidateConviction();
+  const {
+    deleteCandidate: deleteCandidateApi,
+    loading: deleteLoading,
+    error: deleteError,
+    clearError: clearDeleteError,
+  } = useDeleteCandidate();
 
-  // Допустимые значения статуса из базы данных
   const statusOptions = [
     { value: "Прошёл", label: "Прошёл" },
     { value: "Не прошёл", label: "Не прошёл" },
   ];
 
-  // Функция для нормализации статуса для отображения
   const normalizeStatusForDisplay = (status: string): string => {
     if (!status) return "Не прошёл";
-    
     const statusLower = status.toLowerCase().trim();
-    
-    if (statusLower === "прошёл" || statusLower === "прошел" || statusLower === "passed" || statusLower === "approved" || statusLower === "одобрено") {
+    if (
+      statusLower === "прошёл" ||
+      statusLower === "прошел" ||
+      statusLower === "passed" ||
+      statusLower === "approved" ||
+      statusLower === "одобрено"
+    ) {
       return "Прошёл";
     }
-    
     return "Не прошёл";
   };
 
@@ -59,11 +75,6 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
       const normalizedStatus = normalizeStatusForDisplay(data.status);
       setSelectedStatus(normalizedStatus);
       setSelectedConviction(data.has_conviction || false);
-      console.log('Инициализация данных:', {
-        original: data.status,
-        normalized: normalizedStatus,
-        has_conviction: data.has_conviction
-      });
     }
     setShowDeleteConfirm(false);
     clearStatusError();
@@ -71,19 +82,18 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
     clearDeleteError();
   }, [data, open]);
 
-  const handleStatusSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = e.target.value;
-    console.log('Изменение статуса в селекте:', newStatus);
-    setSelectedStatus(newStatus);
+  const handleStatusSelectChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setSelectedStatus(e.target.value);
   };
 
-  const handleConvictionSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newConviction = e.target.value === "true";
-    console.log('Изменение судимости в селекте:', newConviction);
-    setSelectedConviction(newConviction);
+  const handleConvictionSelectChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setSelectedConviction(e.target.value === "true");
   };
 
-  // Функции для управления редактированием статуса
   const handleStartStatusEdit = () => {
     setIsStatusEditMode(true);
     clearStatusError();
@@ -95,7 +105,6 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
     clearStatusError();
   };
 
-  // Функции для управления редактированием судимости
   const handleStartConvictionEdit = () => {
     setIsConvictionEditMode(true);
     clearConvictionError();
@@ -108,83 +117,36 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
   };
 
   const handleStatusUpdate = async () => {
-    if (!localData?.id || !selectedStatus) {
-      console.log('Недостаточно данных для обновления статуса:', { localData, selectedStatus });
-      return;
-    }
-
+    if (!localData?.id || !selectedStatus) return;
     try {
-      console.log('Начало обновления статуса:', {
-        candidateId: localData.id,
-        selectedStatus
-      });
-
       await updateCandidateStatus(localData.id, selectedStatus);
-      
-      console.log('Статус успешно обновлен в API');
-
-      // Обновляем локальное состояние
-      const updatedCandidate = { 
-        ...localData, 
-        status: selectedStatus
-      };
+      const updatedCandidate = { ...localData, status: selectedStatus };
       setLocalData(updatedCandidate);
-      
-      // Вызываем колбэк
       onStatusChange?.(localData.id, selectedStatus);
-      
-      // Выходим из режима редактирования
       setIsStatusEditMode(false);
-      
-      console.log('Локальное состояние обновлено:', updatedCandidate);
-
-    } catch (err: any) {
+    } catch (err) {
       console.error("Ошибка при обновлении статуса:", err);
     }
   };
 
   const handleConvictionUpdate = async () => {
-    if (!localData?.id) {
-      console.log('Недостаточно данных для обновления судимости:', { localData });
-      return;
-    }
-
+    if (!localData?.id) return;
     try {
-      console.log('Начало обновления судимости:', {
-        candidateId: localData.id,
-        selectedConviction
-      });
-
-      // Передаем только ID кандидата и значение судимости
       await updateCandidateConviction(localData.id, selectedConviction);
-      
-      console.log('Судимость успешно обновлена в API');
-
-      // Обновляем локальное состояние
-      const updatedCandidate = { 
-        ...localData, 
-        has_conviction: selectedConviction
-      };
-      setLocalData(updatedCandidate);
-      
-      // Выходим из режима редактирования
+      setLocalData({ ...localData, has_conviction: selectedConviction });
       setIsConvictionEditMode(false);
-      
-      console.log('Локальное состояние обновлено:', updatedCandidate);
-
-    } catch (err: any) {
+    } catch (err) {
       console.error("Ошибка при обновлении судимости:", err);
     }
   };
 
   const handleDeleteClick = async () => {
     if (!localData?.id) return;
-
     try {
       await deleteCandidateApi(localData.id);
       onCandidateDelete?.(localData.id);
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Ошибка при удалении кандидата:", err);
     }
   };
@@ -195,9 +157,7 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
 
   const handleUploadDocuments = () => {
     console.log("Загрузить документы кандидата:", localData);
-    if (localData) {
-      onOpenUploadModal?.(localData);
-    }
+    if (localData) onOpenUploadModal?.(localData);
   };
 
   const formatExperience = (years: number) => {
@@ -209,12 +169,15 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
   };
 
   const getStatusColor = (status: string) => {
-    const normalizedStatus = normalizeStatusForDisplay(status);
-    return normalizedStatus === "Прошёл" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+    return normalizeStatusForDisplay(status) === "Прошёл"
+      ? "bg-green-100 text-green-800"
+      : "bg-red-100 text-red-800";
   };
 
   const getConvictionColor = (hasConviction: boolean) => {
-    return hasConviction ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800";
+    return hasConviction
+      ? "bg-red-100 text-red-800"
+      : "bg-green-100 text-green-800";
   };
 
   if (!open || !localData) return null;
@@ -235,7 +198,9 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
 
         {(statusError || convictionError || deleteError) && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <div className="text-red-800 text-sm">{statusError || convictionError || deleteError}</div>
+            <div className="text-red-800 text-sm">
+              {statusError || convictionError || deleteError}
+            </div>
           </div>
         )}
 
@@ -254,7 +219,7 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
             <div className="flex justify-between items-center">
               <span className="font-medium">Общий стаж:</span>
               <span>
-                {localData.experience_total !== undefined 
+                {localData.experience_total !== undefined
                   ? formatExperience(localData.experience_total)
                   : "-"}
               </span>
@@ -269,9 +234,9 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
               </span>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col">
               <span className="font-medium">Статус:</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mt-1">
                 {isStatusEditMode ? (
                   <select
                     value={selectedStatus}
@@ -286,7 +251,11 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
                     ))}
                   </select>
                 ) : (
-                  <span className={`px-2 py-1 rounded ${getStatusColor(localData.status)}`}>
+                  <span
+                    className={`px-2 py-1 rounded ${getStatusColor(
+                      localData.status
+                    )}`}
+                  >
                     {normalizeStatusForDisplay(localData.status)}
                   </span>
                 )}
@@ -300,6 +269,12 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
                   </button>
                 )}
               </div>
+              {normalizeStatusForDisplay(localData.status) === "Не прошёл" &&
+                localData.reason && (
+                  <div className="text-sm text-red-600 mt-1">
+                    {localData.reason}
+                  </div>
+                )}
             </div>
 
             <div className="flex justify-between items-center">
@@ -316,7 +291,11 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
                     <option value="false">Нет</option>
                   </select>
                 ) : (
-                  <span className={`px-2 py-1 rounded ${getConvictionColor(localData.has_conviction || false)}`}>
+                  <span
+                    className={`px-2 py-1 rounded ${getConvictionColor(
+                      localData.has_conviction || false
+                    )}`}
+                  >
                     {localData.has_conviction ? "Да" : "Нет"}
                   </span>
                 )}
@@ -335,42 +314,45 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
             {localData.birth_date && (
               <div className="flex justify-between items-center">
                 <span className="font-medium">Дата рождения:</span>
-                <span>{new Date(localData.birth_date).toLocaleDateString('ru-RU')}</span>
+                <span>
+                  {new Date(localData.birth_date).toLocaleDateString("ru-RU")}
+                </span>
               </div>
             )}
 
             {localData.achievements && (
               <div>
                 <span className="font-medium block mb-1">Достижения:</span>
-                <p className="text-sm text-gray-600">{localData.achievements}</p>
+                <p className="text-sm text-gray-600">
+                  {localData.achievements}
+                </p>
               </div>
             )}
 
             {localData.previous_awards && (
               <div>
-                <span className="font-medium block mb-1">Предыдущие награды:</span>
-                <p className="text-sm text-gray-600">{localData.previous_awards}</p>
-              </div>
-            )}
-
-            {localData.reason && (
-              <div>
-                <span className="font-medium block mb-1">Основание для награды:</span>
-                <p className="text-sm text-gray-600">{localData.reason}</p>
+                <span className="font-medium block mb-1">
+                  Предыдущие награды:
+                </span>
+                <p className="text-sm text-gray-600">
+                  {localData.previous_awards}
+                </p>
               </div>
             )}
 
             {localData.created_at && (
               <div className="flex justify-between items-center">
                 <span className="font-medium">Дата создания:</span>
-                <span>{new Date(localData.created_at).toLocaleDateString('ru-RU')}</span>
+                <span>
+                  {new Date(localData.created_at).toLocaleDateString("ru-RU")}
+                </span>
               </div>
             )}
           </div>
         </div>
 
         <div className="flex flex-col gap-3">
-          {(isStatusEditMode || isConvictionEditMode) ? (
+          {isStatusEditMode || isConvictionEditMode ? (
             <div className="space-y-3">
               {isStatusEditMode && (
                 <div className="flex gap-2">
@@ -395,7 +377,7 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
                   </Button>
                 </div>
               )}
-              
+
               {isConvictionEditMode && (
                 <div className="flex gap-2">
                   <Button
@@ -427,7 +409,8 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
                   Вы уверены, что хотите удалить кандидата?
                 </div>
                 <div className="text-red-700 text-xs">
-                  Это действие нельзя отменить. Все данные кандидата будут удалены.
+                  Это действие нельзя отменить. Все данные кандидата будут
+                  удалены.
                 </div>
               </div>
               <div className="flex gap-2">

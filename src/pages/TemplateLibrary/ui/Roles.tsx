@@ -12,12 +12,31 @@ import {
 import { RolesModal } from "./RolesModal";
 import { useCommissionRoles } from "@features/template-library/hooks/useCommissionRoles";
 
-export const Roles = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<any>(null);
-  const { roles, loading, error, deleteRole, refresh } = useCommissionRoles();
+interface Member {
+  id: string;
+  full_name: string;
+  position: string;
+  // Add other member properties as needed
+}
 
-  const handleOpenModal = (role: any = null) => {
+interface MembersState {
+  members: Member[];
+}
+
+export const Roles = ({ membersState }: { membersState: MembersState }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  interface Role {
+    id: string;
+    role: string;
+    full_name: string;
+    position: string;
+  }
+
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
+  const { roles, loading, deleteRole, refresh } = useCommissionRoles();
+
+  const handleOpenModal = (role: Role | null = null) => {
     setSelectedRole(role);
     setIsModalOpen(true);
   };
@@ -30,56 +49,20 @@ export const Roles = () => {
   const handleDeleteRole = async (roleId: string) => {
     if (confirm("Вы уверены, что хотите удалить эту роль?")) {
       await deleteRole(roleId);
-      // После удаления обновляем список
       refresh();
     }
   };
 
-  // Функция для обновления списка после добавления роли
   const handleRoleAdded = () => {
-    refresh(); // Обновляем список ролей
+    refresh();
   };
 
-  if (loading) {
-    return (
-      <Card className="border-none w-full p-0 shadow-none">
-        <CardHeader className="w-full p-0">
-          <div className="flex items-center justify-between w-full">
-            <CardTitle className="text-xl font-bold">Роли</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="flex justify-center items-center py-8">
-            Загрузка ролей...
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="border-none w-full p-0 shadow-none">
-        <CardHeader className="w-full p-0">
-          <div className="flex items-center justify-between w-full">
-            <CardTitle className="text-xl font-bold">Роли</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="flex justify-center items-center py-8 text-red-600">
-            {error}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (loading) return <div>Загрузка ролей...</div>;
 
   return (
     <Card className="border-none w-full p-0 shadow-none">
       <CardHeader className="w-full p-0">
-        <div className="flex items-center justify-between w-full">
-          <CardTitle className="text-xl font-bold">Роли</CardTitle>
-        </div>
+        <CardTitle className="text-xl font-bold">Роли</CardTitle>
       </CardHeader>
 
       <CardContent className="p-0">
@@ -103,9 +86,7 @@ export const Roles = () => {
             ) : (
               roles.map((role) => (
                 <TableRow key={role.id}>
-                  <TableCell className="text-center">
-                    {role.role}
-                  </TableCell>
+                  <TableCell className="text-center">{role.role}</TableCell>
                   <TableCell className="text-center">
                     {role.full_name}
                   </TableCell>
@@ -124,22 +105,25 @@ export const Roles = () => {
           </TableBody>
         </Table>
 
-        <div className="flex flex-col gap-2 mt-4">
-          <Button
-            className="w-full"
-            variant="ghost"
-            onClick={() => handleOpenModal()}
-          >
-            Добавить
-          </Button>
-        </div>
+        <Button
+          className="w-full mt-4"
+          variant="ghost"
+          onClick={() => handleOpenModal()}
+        >
+          Добавить
+        </Button>
       </CardContent>
 
       <RolesModal
         open={isModalOpen}
         onClose={handleCloseModal}
-        data={selectedRole}
+        data={
+          selectedRole
+            ? { role: selectedRole.role, member_id: selectedRole.id }
+            : null
+        }
         onRoleAdded={handleRoleAdded}
+        members={membersState.members} // ← передаём актуальный список
       />
     </Card>
   );

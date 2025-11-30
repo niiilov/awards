@@ -10,12 +10,30 @@ import {
   TableCell,
 } from "@shared/ui/table";
 import { ComMembersModal } from "./ComMembersModal";
-import { useCommissionMembers } from "@features/template-library/hooks/useCommissionMembers";
 
-export const ComMembers = () => {
+interface Member {
+  id: string;
+  full_name: string;
+  position: string;
+}
+
+interface MembersState {
+  members: Member[];
+  loading: boolean;
+  error: string | null;
+  deleteMember: (memberId: string) => Promise<void>;
+  refresh: () => void;
+}
+
+interface ComMembersProps {
+  membersState: MembersState;
+}
+
+export const ComMembers = ({ membersState }: ComMembersProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
-  const { members, loading, error, deleteMember, refresh } = useCommissionMembers();
+
+  const { members, loading, error, deleteMember, refresh } = membersState;
 
   const handleOpenModal = (member: any = null) => {
     setSelectedMember(member);
@@ -30,23 +48,19 @@ export const ComMembers = () => {
   const handleDeleteMember = async (memberId: string) => {
     if (confirm("Вы уверены, что хотите удалить этого члена комиссии?")) {
       await deleteMember(memberId);
-      // После удаления обновляем список
       refresh();
     }
   };
 
-  // Функция для обновления списка после добавления члена комиссии
   const handleMemberAdded = () => {
-    refresh(); // Обновляем список членов комиссии
+    refresh();
   };
 
   if (loading) {
     return (
       <Card className="border-none w-full p-0 shadow-none">
         <CardHeader className="w-full p-0">
-          <div className="flex items-center justify-between w-full">
-            <CardTitle className="text-xl font-bold">Члены комиссии</CardTitle>
-          </div>
+          <CardTitle className="text-xl font-bold">Члены комиссии</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="flex justify-center items-center py-8">
@@ -61,9 +75,7 @@ export const ComMembers = () => {
     return (
       <Card className="border-none w-full p-0 shadow-none">
         <CardHeader className="w-full p-0">
-          <div className="flex items-center justify-between w-full">
-            <CardTitle className="text-xl font-bold">Члены комиссии</CardTitle>
-          </div>
+          <CardTitle className="text-xl font-bold">Члены комиссии</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="flex justify-center items-center py-8 text-red-600">
@@ -77,9 +89,7 @@ export const ComMembers = () => {
   return (
     <Card className="border-none w-full p-0 shadow-none">
       <CardHeader className="w-full p-0">
-        <div className="flex items-center justify-between w-full">
-          <CardTitle className="text-xl font-bold">Члены комиссии</CardTitle>
-        </div>
+        <CardTitle className="text-xl font-bold">Члены комиссии</CardTitle>
       </CardHeader>
 
       <CardContent className="p-0">
@@ -100,7 +110,7 @@ export const ComMembers = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              members.map((member) => (
+              members.map((member: Member) => (
                 <TableRow key={member.id}>
                   <TableCell className="text-center">
                     {member.full_name}

@@ -1,4 +1,4 @@
-// features/upload/hooks/useUploadedFiles.ts
+// useUploadedFiles.tsx
 import { useState, useEffect } from "react";
 
 export interface UploadedFileInfo {
@@ -20,33 +20,19 @@ export const useUploadedFiles = () => {
     try {
       setLoading(true);
       setError(null);
-      
       const { api } = await import("@shared/api/axios");
       const response = await api.get("/uploaded-files");
-      
-      console.log('=== Ответ от API /uploaded-files ===', response.data);
-      
-      let filesData: UploadedFileInfo[] = [];
-      
-      if (response.data && typeof response.data === 'object') {
-        // Преобразуем данные из API в наш формат
-        filesData = transformApiData(response.data);
+
+      if (response.data && typeof response.data === "object") {
+        const filesData = transformApiData(response.data);
+        setFiles(filesData);
       } else {
-        console.error('Неверный формат ответа от API:', response.data);
-        filesData = [];
+        setFiles([]);
       }
-      
-      console.log('Извлеченные файлы:', filesData);
-      setFiles(filesData);
       setHasFetched(true);
-      
     } catch (err: any) {
       console.error("Ошибка загрузки списка файлов:", err);
-      setError(
-        err.response?.data?.message || 
-        "Не удалось загрузить список файлов. Пожалуйста, попробуйте позже."
-      );
-      setFiles([]);
+      setFiles([]); // пустая таблица вместо ошибки
       setHasFetched(true);
     } finally {
       setLoading(false);
@@ -57,54 +43,39 @@ export const useUploadedFiles = () => {
     try {
       const { api } = await import("@shared/api/axios");
       await api.delete(`/uploaded-files/${encodeURIComponent(filename)}`);
-      
-      // Обновляем локальное состояние
-      setFiles(prev => prev.filter(file => file.name !== filename));
+      setFiles((prev) => prev.filter((f) => f.name !== filename));
       return true;
     } catch (err: any) {
       console.error("Ошибка при удалении файла:", err);
       setError(
-        err.response?.data?.message || 
-        "Не удалось удалить файл. Пожалуйста, попробуйте позже."
+        err.response?.data?.message ||
+          "Не удалось удалить файл. Попробуйте позже."
       );
       return false;
     }
   };
 
-  // Загружаем файлы только при первом монтировании
   useEffect(() => {
-    if (!hasFetched) {
-      fetchUploadedFiles();
-    }
+    if (!hasFetched) fetchUploadedFiles();
   }, [hasFetched]);
 
-  return {
-    files,
-    loading,
-    error,
-    refetch: fetchUploadedFiles,
-    deleteFile,
-  };
+  return { files, loading, error, refetch: fetchUploadedFiles, deleteFile };
 };
 
-// Функция для преобразования данных из API в наш формат
 const transformApiData = (apiData: any): UploadedFileInfo[] => {
   const files: UploadedFileInfo[] = [];
-  
-  // Обрабатываем каждый ключ в ответе API
-  Object.keys(apiData).forEach(key => {
+  Object.keys(apiData).forEach((key) => {
     const fileArray = apiData[key];
     if (Array.isArray(fileArray)) {
       fileArray.forEach((fileName: string, index: number) => {
         files.push({
-          id: `${key}_${index}`, // Генерируем ID для React key
+          id: `${key}_${index}`,
           name: fileName,
-          status: "Загружен", // По умолчанию считаем загруженными
+          status: "Загружен",
           uploaded_at: new Date().toISOString(),
         });
       });
     }
   });
-  
   return files;
 };

@@ -1,3 +1,4 @@
+// UploadAwards.tsx
 import { Button } from "@shared/ui/button";
 import { Sidebar } from "@shared/ui/sidebar";
 import { useState, useRef } from "react";
@@ -9,22 +10,19 @@ export const UploadAwards = () => {
   const [dragActive, setDragActive] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const {
     loading: uploadLoading,
     error: uploadError,
     uploadMultipleFiles,
-    clearError
+    clearError,
   } = useUploadFile();
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else if (e.type === "dragleave") setDragActive(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -32,70 +30,52 @@ export const UploadAwards = () => {
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    if (e.dataTransfer.files && e.dataTransfer.files[0])
       handleFiles(e.dataTransfer.files);
-    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      handleFiles(e.target.files);
-    }
+    if (e.target.files && e.target.files[0]) handleFiles(e.target.files);
   };
 
   const handleFiles = async (files: FileList) => {
-    // Проверяем форматы файлов
-    const validFiles = Array.from(files).filter(file => {
-      const fileExtension = file.name.split(".").pop()?.toLowerCase();
-      return fileExtension === "pdf" || fileExtension === "docx";
+    const validFiles = Array.from(files).filter((file) => {
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      return ext === "pdf" || ext === "doc" || ext === "docx";
     });
 
-    if (validFiles.length === 0) {
-      alert("Пожалуйста, выберите файлы формата PDF или DOCX");
+    if (!validFiles.length) {
+      alert("Пожалуйста, выберите файлы формата PDF или DOC/DOCX");
       return;
     }
 
-    // Создаем новый FileList с валидными файлами
     const dataTransfer = new DataTransfer();
-    validFiles.forEach(file => dataTransfer.items.add(file));
-    
+    validFiles.forEach((file) => dataTransfer.items.add(file));
+
     try {
-      // Загружаем файлы
       await uploadMultipleFiles(dataTransfer.files);
-      
-      // Обновляем таблицу после загрузки
-      setRefreshTrigger(prev => prev + 1);
-      
-      // Очищаем input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error) {
-      console.error('Ошибка при загрузке файлов:', error);
+      setRefreshTrigger((prev) => prev + 1);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (err) {
+      console.error("Ошибка при загрузке файлов:", err);
     }
   };
 
-  const handleBrowseClick = () => {
-    fileInputRef.current?.click();
-  };
+  const handleBrowseClick = () => fileInputRef.current?.click();
 
   return (
     <div className="flex min-h-screen w-full max-w-[1440px] bg-white">
       <Sidebar className="hidden lg:block" />
-
       <main className="flex-1 w-full border-l border-gray-200 p-6 space-y-6">
-        {/* Заголовок */}
         <div className="flex flex-col">
           <h2 className="text-xl font-semibold">Загрузка файлов</h2>
           <h3 className="text-sm text-neutral-500">
-            Загрузка поддерживает документы только форматом PDF/DOCX
+            Загрузка поддерживает документы только форматом PDF/DOC/DOCX
           </h3>
         </div>
 
-        {/* Основная карточка загрузки */}
         <div className="space-y-6">
-          {/* Область перетаскивания */}
           <div
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
               dragActive
@@ -113,10 +93,12 @@ export const UploadAwards = () => {
                 className="w-full flex justify-center h-6"
                 alt=""
               />
-              <p className="text-bold">
-                {uploadLoading ? "Загрузка файлов..." : "Переместите файлы или выберите их в \"Обзоре\""}
+              <p className="font-bold">
+                {uploadLoading
+                  ? "Загрузка файлов..."
+                  : 'Переместите файлы или выберите их в "Обзоре"'}
               </p>
-              <p className="text-sm text-gray-500">Формат: pdf, docx</p>
+              <p className="text-sm text-gray-500">Формат: pdf, doc, docx</p>
               <Button
                 onClick={handleBrowseClick}
                 disabled={uploadLoading}
@@ -127,14 +109,13 @@ export const UploadAwards = () => {
             </div>
           </div>
 
-          {/* Отображение ошибок загрузки */}
           {uploadError && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
               <div className="text-red-800 text-sm">{uploadError}</div>
-              <Button 
+              <Button
                 onClick={clearError}
-                variant="outline" 
-                size="sm" 
+                variant="outline"
+                size="sm"
                 className="mt-2"
               >
                 Закрыть
@@ -142,18 +123,16 @@ export const UploadAwards = () => {
             </div>
           )}
 
-          {/* Скрытый input */}
           <input
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".pdf,.docx"
+            accept=".pdf,.doc,.docx"
             onChange={handleChange}
             className="hidden"
             disabled={uploadLoading}
           />
 
-          {/* Таблица загруженных файлов */}
           <div className="min-w-full flex pb-2 gap-6 overflow-x-auto flex-nowrap">
             <UploadedTable refreshTrigger={refreshTrigger} />
           </div>

@@ -8,17 +8,27 @@ import { useGenerateLetter } from "@features/certificates/hooks/useGenerateLette
 import { useCandidates } from "@features/candidates/hooks/useCandidates";
 
 export const Certificates = () => {
-  const [activeType, setActiveType] = useState<"certificate" | "gratitude">("certificate");
+  const [activeType, setActiveType] = useState<"certificate" | "gratitude">(
+    "certificate"
+  );
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
-    position: "", 
-    reason: ""
+    position: "",
+    reason: "",
   });
 
   const { candidates, loading: isLoadingCandidates } = useCandidates();
-  const { generateDiploma, isLoading: isLoadingDiploma, error: errorDiploma } = useGenerateDiploma();
-  const { generateLetter, isLoading: isLoadingLetter, error: errorLetter } = useGenerateLetter();
+  const {
+    generateDiploma,
+    isLoading: isLoadingDiploma,
+    error: errorDiploma,
+  } = useGenerateDiploma();
+  const {
+    generateLetter,
+    isLoading: isLoadingLetter,
+    error: errorLetter,
+  } = useGenerateLetter();
 
   const isLoading = isLoadingDiploma || isLoadingLetter;
   const error = errorDiploma || errorLetter;
@@ -26,57 +36,71 @@ export const Certificates = () => {
   // Автозаполнение формы при выборе кандидата
   useEffect(() => {
     if (selectedCandidateId) {
-      const selectedCandidate = candidates.find(c => c.id === selectedCandidateId);
+      const selectedCandidate = candidates.find(
+        (c) => c.id === selectedCandidateId
+      );
       if (selectedCandidate) {
         setFormData({
           name: selectedCandidate.full_name,
           position: selectedCandidate.position,
-          reason: selectedCandidate.reason || "За высокие профессиональные достижения и добросовестный труд"
+          reason:
+            selectedCandidate.reason ||
+            "За высокие профессиональные достижения и добросовестный труд",
         });
       }
     } else {
       // Сброс формы при очистке выбора кандидата
       setFormData({
         name: "",
-        position: "", 
-        reason: ""
+        position: "",
+        reason: "",
       });
     }
   }, [selectedCandidateId, candidates]);
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleGenerate = async () => {
-    if (!formData.name.trim() || !formData.position.trim() || !formData.reason.trim()) {
+    if (
+      !formData.name.trim() ||
+      !formData.position.trim() ||
+      !formData.reason.trim()
+    ) {
       alert("Пожалуйста, заполните все поля");
       return;
     }
 
-    console.log('🎯 Starting generation...', { type: activeType, data: formData });
+    console.log("🎯 Starting generation...", {
+      type: activeType,
+      data: formData,
+    });
 
-    const success = activeType === "certificate" 
-      ? await generateDiploma(formData)
-      : await generateLetter(formData);
+    const success =
+      activeType === "certificate"
+        ? await generateDiploma(formData)
+        : await generateLetter(formData);
 
     if (success) {
-      console.log('✅ Generation successful');
+      console.log("✅ Generation successful");
     } else {
-      console.log('❌ Generation failed');
+      console.log("❌ Generation failed");
     }
   };
 
+  const uniqueCandidates = Array.from(
+    new Map(candidates.map((c) => [c.full_name, c])).values()
+  );
 
   return (
     <div className="flex min-h-screen w-full max-w-[1440px] bg-white">
       <Sidebar className="hidden lg:block" />
 
       <main className="flex-1 w-full gap-4 flex flex-col border-l border-gray-200 p-6 space-y-6">
-
         <div className="flex md:flex-row flex-col gap-2">
           <Button
             onClick={() => setActiveType("certificate")}
@@ -116,14 +140,16 @@ export const Certificates = () => {
               className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="">Выберите кандидата</option>
-              {candidates.map(candidate => (
+              {uniqueCandidates.map((candidate) => (
                 <option key={candidate.id} value={candidate.id}>
                   {candidate.full_name} - {candidate.position}
                 </option>
               ))}
             </select>
             {isLoadingCandidates && (
-              <span className="text-xs text-gray-500">Загрузка списка кандидатов...</span>
+              <span className="text-xs text-gray-500">
+                Загрузка списка кандидатов...
+              </span>
             )}
             {!selectedCandidateId && (
               <span className="text-xs text-gray-500">
@@ -134,16 +160,16 @@ export const Certificates = () => {
 
           {/* ФИО */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-600">
-              ФИО *
-            </label>
+            <label className="text-sm font-medium text-gray-600">ФИО *</label>
             <Input
               placeholder="Введите ФИО"
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
             />
             {selectedCandidateId && (
-              <span className="text-xs text-gray-500">ФИО автоматически заполнено из выбранного кандидата</span>
+              <span className="text-xs text-gray-500">
+                ФИО автоматически заполнено из выбранного кандидата
+              </span>
             )}
           </div>
 
@@ -158,7 +184,9 @@ export const Certificates = () => {
               onChange={(e) => handleInputChange("position", e.target.value)}
             />
             {selectedCandidateId && (
-              <span className="text-xs text-gray-500">Должность автоматически заполнена из выбранного кандидата</span>
+              <span className="text-xs text-gray-500">
+                Должность автоматически заполнена из выбранного кандидата
+              </span>
             )}
           </div>
 
@@ -181,9 +209,14 @@ export const Certificates = () => {
           </div>
         )}
 
-        <Button 
+        <Button
           onClick={handleGenerate}
-          disabled={isLoading || !formData.name || !formData.position || !formData.reason}
+          disabled={
+            isLoading ||
+            !formData.name ||
+            !formData.position ||
+            !formData.reason
+          }
           className="bg-blue-600 w-full max-w-2xl rounded border-none hover:bg-green-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {isLoading ? "Генерация..." : "Сгенерировать"}
@@ -192,28 +225,37 @@ export const Certificates = () => {
         {/* Информация о выбранном кандидате */}
         {selectedCandidateId && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl">
-            <h4 className="font-medium text-blue-800 mb-2">Информация о выбранном кандидате:</h4>
+            <h4 className="font-medium text-blue-800 mb-2">
+              Информация о выбранном кандидате:
+            </h4>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
                 <span className="text-gray-600">Статус:</span>{" "}
-                <span className={
-                  candidates.find(c => c.id === selectedCandidateId)?.status === "Прошёл" 
-                    ? "text-green-600 font-medium" 
-                    : "text-red-600 font-medium"
-                }>
-                  {candidates.find(c => c.id === selectedCandidateId)?.status || "Неизвестно"}
+                <span
+                  className={
+                    candidates.find((c) => c.id === selectedCandidateId)
+                      ?.status === "Прошёл"
+                      ? "text-green-600 font-medium"
+                      : "text-red-600 font-medium"
+                  }
+                >
+                  {candidates.find((c) => c.id === selectedCandidateId)
+                    ?.status || "Неизвестно"}
                 </span>
               </div>
               <div>
                 <span className="text-gray-600">Общий стаж:</span>{" "}
                 <span className="font-medium">
-                  {candidates.find(c => c.id === selectedCandidateId)?.experience_total || 0} лет
+                  {candidates.find((c) => c.id === selectedCandidateId)
+                    ?.experience_total || 0}{" "}
+                  лет
                 </span>
               </div>
               <div className="col-span-2">
                 <span className="text-gray-600">Достижения:</span>{" "}
                 <span className="font-medium">
-                  {candidates.find(c => c.id === selectedCandidateId)?.achievements || "Не указаны"}
+                  {candidates.find((c) => c.id === selectedCandidateId)
+                    ?.achievements || "Не указаны"}
                 </span>
               </div>
             </div>
