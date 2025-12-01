@@ -234,80 +234,37 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
               </span>
             </div>
 
-            <div className="flex flex-col">
+            {/* Статус - только для отображения */}
+            <div className="flex justify-between items-center">
               <span className="font-medium">Статус:</span>
-              <div className="flex items-center gap-2 mt-1">
-                {isStatusEditMode ? (
-                  <select
-                    value={selectedStatus}
-                    onChange={handleStatusSelectChange}
-                    className="border rounded px-2 py-1 min-w-[120px]"
-                    disabled={statusLoading}
-                  >
-                    {statusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span
-                    className={`px-2 py-1 rounded ${getStatusColor(
-                      localData.status
-                    )}`}
-                  >
-                    {normalizeStatusForDisplay(localData.status)}
-                  </span>
-                )}
-                {!isStatusEditMode && (
-                  <button
-                    onClick={handleStartStatusEdit}
-                    className="text-blue-600 hover:text-blue-800"
-                    title="Изменить статус"
-                  >
-                    <Edit size={14} />
-                  </button>
-                )}
+              <div className="flex items-center gap-2">
+                <span
+                  className={`px-2 py-1 rounded ${getStatusColor(
+                    localData.status
+                  )}`}
+                >
+                  {normalizeStatusForDisplay(localData.status)}
+                </span>
               </div>
-              {normalizeStatusForDisplay(localData.status) === "Не прошёл" &&
-                localData.reason && (
-                  <div className="text-sm text-red-600 mt-1">
-                    {localData.reason}
-                  </div>
-                )}
             </div>
+            {normalizeStatusForDisplay(localData.status) === "Не прошёл" &&
+              localData.reason && (
+                <div className="text-sm text-red-600 mt-1">
+                  {localData.reason}
+                </div>
+              )}
 
+            {/* Наличие судимости - только для отображения */}
             <div className="flex justify-between items-center">
               <span className="font-medium">Наличие судимости:</span>
               <div className="flex items-center gap-2">
-                {isConvictionEditMode ? (
-                  <select
-                    value={selectedConviction.toString()}
-                    onChange={handleConvictionSelectChange}
-                    className="border rounded px-2 py-1 min-w-[80px]"
-                    disabled={convictionLoading}
-                  >
-                    <option value="true">Да</option>
-                    <option value="false">Нет</option>
-                  </select>
-                ) : (
-                  <span
-                    className={`px-2 py-1 rounded ${getConvictionColor(
-                      localData.has_conviction || false
-                    )}`}
-                  >
-                    {localData.has_conviction ? "Да" : "Нет"}
-                  </span>
-                )}
-                {!isConvictionEditMode && (
-                  <button
-                    onClick={handleStartConvictionEdit}
-                    className="text-blue-600 hover:text-blue-800"
-                    title="Изменить наличие судимости"
-                  >
-                    <Edit size={14} />
-                  </button>
-                )}
+                <span
+                  className={`px-2 py-1 rounded ${getConvictionColor(
+                    localData.has_conviction || false
+                  )}`}
+                >
+                  {localData.has_conviction ? "Да" : "Нет"}
+                </span>
               </div>
             </div>
 
@@ -355,51 +312,86 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
           {isStatusEditMode || isConvictionEditMode ? (
             <div className="space-y-3">
               {isStatusEditMode && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="cube"
-                    className="flex-1"
-                    onClick={handleStatusUpdate}
-                    disabled={statusLoading || !selectedStatus}
-                  >
-                    <Save size={16} className="mr-2" />
-                    {statusLoading ? "Сохранение..." : "Сохранить статус"}
-                  </Button>
-                  <Button
-                    variant="cube"
-                    color="grey"
-                    className="flex-1"
-                    onClick={handleCancelStatusEdit}
-                    disabled={statusLoading}
-                  >
-                    <X size={16} className="mr-2" />
-                    Отмена
-                  </Button>
-                </div>
+                <>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="text-blue-800 text-sm font-medium mb-2">
+                      Изменение статуса
+                    </div>
+                    <select
+                      value={selectedStatus}
+                      onChange={handleStatusSelectChange}
+                      className="w-full border rounded px-3 py-2"
+                      disabled={statusLoading}
+                    >
+                      {statusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="cube"
+                      className="flex-1"
+                      onClick={handleStatusUpdate}
+                      disabled={statusLoading || !selectedStatus}
+                    >
+                      <Save size={16} className="mr-2" />
+                      {statusLoading ? "Сохранение..." : "Сохранить статус"}
+                    </Button>
+                    <Button
+                      variant="cube"
+                      color="grey"
+                      className="flex-1"
+                      onClick={handleCancelStatusEdit}
+                      disabled={statusLoading}
+                    >
+                      <X size={16} className="mr-2" />
+                      Отмена
+                    </Button>
+                  </div>
+                </>
               )}
 
               {isConvictionEditMode && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="cube"
-                    className="flex-1"
-                    onClick={handleConvictionUpdate}
-                    disabled={convictionLoading}
-                  >
-                    <Save size={16} className="mr-2" />
-                    {convictionLoading ? "Сохранение..." : "Сохранить"}
-                  </Button>
-                  <Button
-                    variant="cube"
-                    color="grey"
-                    className="flex-1"
-                    onClick={handleCancelConvictionEdit}
-                    disabled={convictionLoading}
-                  >
-                    <X size={16} className="mr-2" />
-                    Отмена
-                  </Button>
-                </div>
+                <>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="text-blue-800 text-sm font-medium mb-2">
+                      Изменение наличия судимости
+                    </div>
+                    <select
+                      value={selectedConviction.toString()}
+                      onChange={handleConvictionSelectChange}
+                      className="w-full border rounded px-3 py-2"
+                      disabled={convictionLoading}
+                    >
+                      <option value="true">Да</option>
+                      <option value="false">Нет</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="cube"
+                      className="flex-1"
+                      onClick={handleConvictionUpdate}
+                      disabled={convictionLoading}
+                    >
+                      <Save size={16} className="mr-2" />
+                      {convictionLoading ? "Сохранение..." : "Сохранить"}
+                    </Button>
+                    <Button
+                      variant="cube"
+                      color="grey"
+                      className="flex-1"
+                      onClick={handleCancelConvictionEdit}
+                      disabled={convictionLoading}
+                    >
+                      <X size={16} className="mr-2" />
+                      Отмена
+                    </Button>
+                  </div>
+                </>
               )}
             </div>
           ) : showDeleteConfirm ? (

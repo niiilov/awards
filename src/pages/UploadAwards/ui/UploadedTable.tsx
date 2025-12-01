@@ -15,15 +15,22 @@ interface UploadedTableProps {
   refreshTrigger?: number;
 }
 
-export const UploadedTable = ({ refreshTrigger = 0 }: UploadedTableProps) => {
+export const UploadedTable = ({ 
+  refreshTrigger = 0
+}: UploadedTableProps) => {
   const { files, loading, error, deleteFile, refetch } = useUploadedFiles();
   const previousRefreshTrigger = useRef(refreshTrigger);
+  const lastRefreshTime = useRef<number>(0);
 
-  // Автоматически обновляем список файлов только когда refreshTrigger увеличивается
+  // Обновляем список файлов при изменении refreshTrigger
   useEffect(() => {
-    if (refreshTrigger > previousRefreshTrigger.current) {
+    const now = Date.now();
+    // Защита от слишком частых обновлений (минимум 2 секунды)
+    if (refreshTrigger > previousRefreshTrigger.current && now - lastRefreshTime.current > 2000) {
+      console.log('Обновляем список файлов, trigger:', refreshTrigger);
       refetch();
       previousRefreshTrigger.current = refreshTrigger;
+      lastRefreshTime.current = now;
     }
   }, [refreshTrigger, refetch]);
 
@@ -43,7 +50,12 @@ export const UploadedTable = ({ refreshTrigger = 0 }: UploadedTableProps) => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU');
+    try {
+      const date = new Date(dateString);
+      return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('ru-RU');
+    } catch {
+      return dateString;
+    }
   };
 
   const handleDelete = async (filename: string) => {
@@ -55,12 +67,28 @@ export const UploadedTable = ({ refreshTrigger = 0 }: UploadedTableProps) => {
     }
   };
 
+  const handleRefresh = () => {
+    const now = Date.now();
+    if (now - lastRefreshTime.current > 2000) {
+      refetch();
+      lastRefreshTime.current = now;
+    }
+  };
+
   if (loading && files.length === 0) {
     return (
       <Card className="border-none w-full p-0 shadow-none">
         <CardHeader className="w-full p-0">
-          <div className="flex items-center justify-between w-full">
+          <div className="flex items-center justify-between w-full mb-4">
             <CardTitle className="text-xl font-bold">Загруженные файлы</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={loading}
+            >
+              Обновить
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -76,8 +104,16 @@ export const UploadedTable = ({ refreshTrigger = 0 }: UploadedTableProps) => {
     return (
       <Card className="border-none w-full p-0 shadow-none">
         <CardHeader className="w-full p-0">
-          <div className="flex items-center justify-between w-full">
+          <div className="flex items-center justify-between w-full mb-4">
             <CardTitle className="text-xl font-bold">Загруженные файлы</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={loading}
+            >
+              Обновить
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -99,6 +135,17 @@ export const UploadedTable = ({ refreshTrigger = 0 }: UploadedTableProps) => {
   return (
     <Card className="border-none w-full p-0 shadow-none">
       <CardHeader className="w-full p-0">
+        <div className="flex items-center justify-between w-full mb-4">
+          <CardTitle className="text-xl font-bold">Загруженные файлы</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            {loading ? 'Обновление...' : 'Обновить'}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
@@ -111,42 +158,42 @@ export const UploadedTable = ({ refreshTrigger = 0 }: UploadedTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {files.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-gray-500">
-                  Нет загруженных файлов
-                </TableCell>
-              </TableRow>
-            ) : (
-              files.map((file) => (
-                <TableRow key={file.id}>
-                  <TableCell className="text-center font-medium">
-                    {file.name}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className={getStatusColor(file.status)}>
-                      {file.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {formatDate(file.uploaded_at)}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex justify-center">
-                      <Button
-                        variant="cube"
-                        color="grey"
-                        onClick={() => handleDelete(file.name)}
-                        disabled={loading}
-                      >
-                        Удалить
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
+  {files.length === 0 ? (
+    <TableRow>
+      <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+        Нет загруженных файлов
+      </TableCell>
+    </TableRow>
+  ) : (
+    files.map((file) => (
+      <TableRow key={`${file.id}-${file.server_name}`}>
+        <TableCell className="text-center font-medium">
+          {file.display_name}
+        </TableCell>
+        <TableCell className="text-center">
+          <span className={getStatusColor(file.status)}>
+            {file.status}
+          </span>
+        </TableCell>
+        <TableCell className="text-center">
+          {formatDate(file.uploaded_at)}
+        </TableCell>
+        <TableCell className="text-center">
+          <div className="flex justify-center">
+            <Button
+              variant="cube"
+              color="grey"
+              onClick={() => handleDelete(file.display_name)}
+              disabled={loading}
+            >
+              Удалить
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
+    ))
+  )}
+</TableBody>
         </Table>
         {loading && files.length > 0 && (
           <div className="flex justify-center items-center py-4">

@@ -50,13 +50,21 @@ export const UploadAwards = () => {
       return;
     }
 
+    console.log('Начинаем загрузку файлов:', validFiles.map(f => f.name));
+
     const dataTransfer = new DataTransfer();
     validFiles.forEach((file) => dataTransfer.items.add(file));
 
     try {
-      await uploadMultipleFiles(dataTransfer.files);
-      setRefreshTrigger((prev) => prev + 1);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      const success = await uploadMultipleFiles(dataTransfer.files);
+      if (success) {
+        // Даем серверу время обработать файлы
+        setTimeout(() => {
+          setRefreshTrigger((prev) => prev + 1);
+        }, 1500);
+        
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
     } catch (err) {
       console.error("Ошибка при загрузке файлов:", err);
     }
@@ -134,7 +142,9 @@ export const UploadAwards = () => {
           />
 
           <div className="min-w-full flex pb-2 gap-6 overflow-x-auto flex-nowrap">
-            <UploadedTable refreshTrigger={refreshTrigger} />
+            <UploadedTable 
+              refreshTrigger={refreshTrigger} 
+            />
           </div>
         </div>
       </main>
