@@ -140,12 +140,16 @@ export const Certificates = () => {
               className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="">Выберите кандидата</option>
-              {uniqueCandidates.map((candidate) => (
-                <option key={candidate.id} value={candidate.id}>
-                  {candidate.full_name} - {candidate.position}
-                </option>
-              ))}
+
+              {uniqueCandidates
+                .filter((candidate) => candidate.status === "Прошёл")
+                .map((candidate) => (
+                  <option key={candidate.id} value={candidate.id}>
+                    {candidate.full_name} - {candidate.position}
+                  </option>
+                ))}
             </select>
+
             {isLoadingCandidates && (
               <span className="text-xs text-gray-500">
                 Загрузка списка кандидатов...
