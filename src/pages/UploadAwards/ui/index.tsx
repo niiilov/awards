@@ -5,11 +5,13 @@ import { useState, useRef } from "react";
 import SendIcon from "../assets/Icon.svg";
 import { UploadedTable } from "./UploadedTable";
 import { useUploadFile } from "@features/upload-awards/hooks/useUploadFile";
+import { UploadMessage } from "./UploadMessage";
 
 export const UploadAwards = () => {
   const [dragActive, setDragActive] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const {
     loading: uploadLoading,
@@ -50,19 +52,28 @@ export const UploadAwards = () => {
       return;
     }
 
-    console.log('Начинаем загрузку файлов:', validFiles.map(f => f.name));
+    console.log(
+      "Начинаем загрузку файлов:",
+      validFiles.map((f) => f.name)
+    );
 
     const dataTransfer = new DataTransfer();
     validFiles.forEach((file) => dataTransfer.items.add(file));
 
     try {
       const success = await uploadMultipleFiles(dataTransfer.files);
+      console.log("================ uploadMultipleFiles result:", success);
       if (success) {
+        setShowSuccessMessage(true);
+
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 3000);
         // Даем серверу время обработать файлы
         setTimeout(() => {
           setRefreshTrigger((prev) => prev + 1);
         }, 1500);
-        
+
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     } catch (err) {
@@ -75,7 +86,7 @@ export const UploadAwards = () => {
   return (
     <div className="flex min-h-screen w-full max-w-[1440px] bg-white">
       <Sidebar className="hidden lg:block" />
-      <main className="flex-1 w-full border-l border-gray-200 p-6 space-y-6">
+      <main className="flex-1 relative w-full border-l border-gray-200 p-6 space-y-6">
         <div className="flex flex-col">
           <h2 className="text-xl font-semibold">Загрузка файлов</h2>
           <h3 className="text-sm text-neutral-500">
@@ -142,11 +153,10 @@ export const UploadAwards = () => {
           />
 
           <div className="min-w-full flex pb-2 gap-6 overflow-x-auto flex-nowrap">
-            <UploadedTable 
-              refreshTrigger={refreshTrigger} 
-            />
+            <UploadedTable refreshTrigger={refreshTrigger} />
           </div>
         </div>
+        <UploadMessage isVisible={showSuccessMessage} />
       </main>
     </div>
   );

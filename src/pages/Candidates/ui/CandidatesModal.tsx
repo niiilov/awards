@@ -451,26 +451,6 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
                 </Button>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="cube"
-                  className="flex-1"
-                  onClick={handleDownloadDocuments}
-                >
-                  <Download size={16} className="mr-2" />
-                  Скачать документы
-                </Button>
-
-                <Button
-                  variant="cube"
-                  className="flex-1"
-                  onClick={handleUploadDocuments}
-                >
-                  <Upload size={16} className="mr-2" />
-                  Загрузить документы
-                </Button>
-              </div>
-
               <Button
                 variant="cube"
                 color="grey"

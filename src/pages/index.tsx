@@ -60,10 +60,16 @@ export const Router: FC = () => {
           <Route path={ROUTE_CONSTANTS.PROFILE} element={<Profile />} />
 
           {/* Добавленные маршруты */}
-          <Route path={ROUTE_CONSTANTS.UPLOADAWARDS} element={<UploadAwards />} />
+          <Route
+            path={ROUTE_CONSTANTS.UPLOADAWARDS}
+            element={<UploadAwards />}
+          />
           <Route path={ROUTE_CONSTANTS.CANDIDATES} element={<Candidates />} />
           <Route path={ROUTE_CONSTANTS.PROTOCOL} element={<Protocol />} />
-          <Route path={ROUTE_CONSTANTS.CERTIFICATES} element={<Certificates />} />
+          <Route
+            path={ROUTE_CONSTANTS.CERTIFICATES}
+            element={<Certificates />}
+          />
           <Route
             path={ROUTE_CONSTANTS.TEMPLATELIBRARY}
             element={<TemplateLibrary />}
