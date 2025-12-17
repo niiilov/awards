@@ -90,7 +90,7 @@ export const Protocol = () => {
           status: err.response?.status,
         });
         setCandidatesError(
-          `Не удалось загрузить список кандидатов: ${err.message}`
+          `Не удалось загрузить список кандидатов: ${err.message}`,
         );
       } finally {
         setCandidatesLoading(false);
@@ -151,7 +151,7 @@ export const Protocol = () => {
 
   const handleRoleChange = (
     role: keyof Pick<typeof selectedMembers, "pred" | "zam" | "secr">,
-    memberId: string
+    memberId: string,
   ) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
@@ -160,8 +160,8 @@ export const Protocol = () => {
       role === "pred"
         ? "Председатель"
         : role === "zam"
-        ? "Заместитель"
-        : "Секретарь";
+          ? "Заместитель"
+          : "Секретарь";
 
     setSelectedMembers((prev) => ({
       ...prev,
@@ -186,7 +186,7 @@ export const Protocol = () => {
     setSelectedCandidates((prev) =>
       prev.includes(candidateId)
         ? prev.filter((id) => id !== candidateId)
-        : [...prev, candidateId]
+        : [...prev, candidateId],
     );
   };
 
@@ -214,21 +214,21 @@ export const Protocol = () => {
         ...(selectedMembers.pred
           ? [
               members.find(
-                (m) => m.full_name === selectedMembers.pred?.full_name
+                (m) => m.full_name === selectedMembers.pred?.full_name,
               )?.id,
             ]
           : []),
         ...(selectedMembers.zam
           ? [
               members.find(
-                (m) => m.full_name === selectedMembers.zam?.full_name
+                (m) => m.full_name === selectedMembers.zam?.full_name,
               )?.id,
             ]
           : []),
         ...(selectedMembers.secr
           ? [
               members.find(
-                (m) => m.full_name === selectedMembers.secr?.full_name
+                (m) => m.full_name === selectedMembers.secr?.full_name,
               )?.id,
             ]
           : []),
@@ -263,7 +263,7 @@ export const Protocol = () => {
       console.error("Ошибка при генерации протокола:", err);
       alert(
         "Ошибка при генерации протокола: " +
-          (err.response?.data?.message || err.message)
+          (err.response?.data?.message || err.message),
       );
     }
   };
@@ -274,32 +274,40 @@ export const Protocol = () => {
       selectedMembers.pred &&
       members.find(
         (m) =>
-          selectedMembers.pred && m.full_name === selectedMembers.pred.full_name
+          selectedMembers.pred &&
+          m.full_name === selectedMembers.pred.full_name,
       )?.id === member.id;
     const isZam =
       selectedMembers.zam &&
       members.find(
         (m) =>
-          selectedMembers.zam && m.full_name === selectedMembers.zam.full_name
+          selectedMembers.zam && m.full_name === selectedMembers.zam.full_name,
       )?.id === member.id;
     const isSecr =
       selectedMembers.secr &&
       members.find(
         (m) =>
-          selectedMembers.secr && m.full_name === selectedMembers.secr.full_name
+          selectedMembers.secr &&
+          m.full_name === selectedMembers.secr.full_name,
       )?.id === member.id;
 
     return !isPred && !isZam && !isSecr;
   });
 
   const loading = membersLoading || rolesLoading || candidatesLoading;
+
+  // Фильтруем кандидатов по статусу
+  const filteredCandidates = candidates.filter(
+    (candidate) => candidate.status !== "Не прошёл",
+  );
+
   const getSelectedMemberId = (
-    role: keyof Pick<typeof selectedMembers, "pred" | "zam" | "secr">
+    role: keyof Pick<typeof selectedMembers, "pred" | "zam" | "secr">,
   ): string => {
     if (!selectedMembers[role]) return "";
 
     const member = members.find(
-      (m) => m.full_name === selectedMembers[role]?.full_name
+      (m) => m.full_name === selectedMembers[role]?.full_name,
     );
     return member?.id || "";
   };
@@ -321,8 +329,10 @@ export const Protocol = () => {
     candidatesLoading,
     candidatesError,
     candidatesCount: candidates.length,
+    filteredCandidatesCount: filteredCandidates.length,
     candidates: candidates,
   });
+
   return (
     <div className="flex min-h-screen w-full max-w-[1440px] bg-white">
       <Sidebar className="hidden lg:block" />
@@ -357,84 +367,81 @@ export const Protocol = () => {
                       Попробовать снова
                     </Button>
                   </div>
-                ) : candidates.length > 0 ? (
+                ) : filteredCandidates.length > 0 ? (
                   <>
                     <div className="text-xs text-gray-500 mb-2">
-                      Найдено кандидатов: {candidates.length}
+                      Найдено кандидатов: {filteredCandidates.length}
                     </div>
-                    {candidates
-                      .filter((candidate) => candidate.status !== "Не прошёл")
-                      .map((candidate) => (
-                        <div
-                          key={candidate.id}
-                          className="flex items-start gap-2 p-3 hover:bg-gray-50 rounded border border-gray-100"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedCandidates.includes(candidate.id)}
-                            onChange={() => handleCandidateToggle(candidate.id)}
-                            className="w-4 h-4 text-blue-400 rounded border-gray-300 focus:ring-blue-500 mt-1"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-sm font-medium text-gray-800">
-                                    {candidate.full_name || "Без имени"}
+                    {filteredCandidates.map((candidate) => (
+                      <div
+                        key={candidate.id}
+                        className="flex items-start gap-2 p-3 hover:bg-gray-50 rounded border border-gray-100"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCandidates.includes(candidate.id)}
+                          onChange={() => handleCandidateToggle(candidate.id)}
+                          className="w-4 h-4 text-blue-400 rounded border-gray-300 focus:ring-blue-500 mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-medium text-gray-800">
+                                  {candidate.full_name || "Без имени"}
+                                </span>
+                                <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded">
+                                  {candidate.position || "Без должности"}
+                                </span>
+                              </div>
+                              <div className="mt-1 space-y-1">
+                                <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                                  <span>
+                                    Дата рождения:{" "}
+                                    {formatDate(candidate.birth_date)}
                                   </span>
-                                  <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded">
-                                    {candidate.position || "Без должности"}
+                                  <span>•</span>
+                                  <span>
+                                    Стаж: {candidate.experience_total || 0} лет
                                   </span>
                                 </div>
-                                <div className="mt-1 space-y-1">
-                                  <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                                    <span>
-                                      Дата рождения:{" "}
-                                      {formatDate(candidate.birth_date)}
-                                    </span>
-                                    <span>•</span>
-                                    <span>
-                                      Стаж: {candidate.experience_total || 0}{" "}
-                                      лет
-                                    </span>
+                                {candidate.achievements && (
+                                  <div className="text-xs text-gray-600">
+                                    <span className="font-medium">
+                                      Достижения:
+                                    </span>{" "}
+                                    {candidate.achievements}
                                   </div>
-                                  {candidate.achievements && (
-                                    <div className="text-xs text-gray-600">
-                                      <span className="font-medium">
-                                        Достижения:
-                                      </span>{" "}
-                                      {candidate.achievements}
-                                    </div>
-                                  )}
-                                  {candidate.previous_awards && (
-                                    <div className="text-xs text-gray-600">
-                                      <span className="font-medium">
-                                        Награды:
-                                      </span>{" "}
-                                      {candidate.previous_awards}
-                                    </div>
-                                  )}
-                                  <div className="text-xs text-gray-500">
-                                    Статус:{" "}
-                                    <span
-                                      className={`px-1.5 py-0.5 rounded ${
-                                        candidate.status === "active"
-                                          ? "bg-green-100 text-green-800"
-                                          : "bg-gray-100 text-gray-800"
-                                      }`}
-                                    >
-                                      {candidate.status || "не указан"}
-                                    </span>
+                                )}
+                                {candidate.previous_awards && (
+                                  <div className="text-xs text-gray-600">
+                                    <span className="font-medium">
+                                      Награды:
+                                    </span>{" "}
+                                    {candidate.previous_awards}
                                   </div>
+                                )}
+                                <div className="text-xs text-gray-500">
+                                  Статус:{" "}
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded ${
+                                      candidate.status === "active"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-gray-100 text-gray-800"
+                                    }`}
+                                  >
+                                    {candidate.status || "не указан"}
+                                  </span>
                                 </div>
                               </div>
-                              <div className="text-xs text-gray-500 text-right">
-                                ID: {candidate.id.substring(0, 8)}...
-                              </div>
+                            </div>
+                            <div className="text-xs text-gray-500 text-right">
+                              ID: {candidate.id.substring(0, 8)}...
                             </div>
                           </div>
                         </div>
-                      ))}
+                      </div>
+                    ))}
                   </>
                 ) : (
                   <div className="text-center py-8">
@@ -457,7 +464,9 @@ export const Protocol = () => {
                       Нет доступных кандидатов
                     </p>
                     <p className="text-xs text-gray-400">
-                      Кандидаты не найдены в системе
+                      {candidates.length > 0
+                        ? `Все ${candidates.length} кандидатов имеют статус "Не прошёл"`
+                        : "Кандидаты не найдены в системе"}
                     </p>
                     <div className="mt-4 text-xs text-gray-500">
                       <p>Возможные причины:</p>
@@ -606,7 +615,7 @@ export const Protocol = () => {
                       <input
                         type="checkbox"
                         checked={selectedMembers.other.some(
-                          (m) => m.id === member.id
+                          (m) => m.id === member.id,
                         )}
                         onChange={() => handleOtherMemberToggle(member)}
                         className="w-4 h-4 text-blue-400 rounded border-gray-300 focus:ring-blue-500"
@@ -668,7 +677,7 @@ export const Protocol = () => {
                         {selectedMembers.other
                           .map(
                             (member) =>
-                              `${member.full_name} (${member.position})`
+                              `${member.full_name} (${member.position})`,
                           )
                           .join(", ")}
                       </span>

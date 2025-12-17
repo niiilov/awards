@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@shared/ui/button";
 import { Sheet, SheetTrigger, SheetContent } from "@shared/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, CircleUserRound } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -152,7 +152,6 @@ export const Navbar = () => {
 
             {/* Меню для десктопа */}
             <div className="hidden lg:flex items-center gap-6">
-              
               <UserDropdown onLogout={handleLogoutClick}>
                 {user?.username || "Пользователь"}
               </UserDropdown>

@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, CircleUserRound } from "lucide-react";
 import { useClickOutside } from "@shared/hooks/useClickOutside";
 
 interface UserDropdownProps {
@@ -47,8 +47,10 @@ export const UserDropdown = ({ children, onLogout }: UserDropdownProps) => {
           </span>
         </div>
         <Avatar className="h-8 w-8">
-          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-          <AvatarFallback>CN</AvatarFallback>
+          <AvatarImage src={undefined} alt="Avatar" />
+          <AvatarFallback>
+            <CircleUserRound className="h-7 w-7 text-neutral-500" />
+          </AvatarFallback>
         </Avatar>
       </button>
 

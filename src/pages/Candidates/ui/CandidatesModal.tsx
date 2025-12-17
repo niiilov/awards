@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@shared/ui/button";
-import { Upload, Download, Edit, Save, X, Trash2 } from "lucide-react";
+import { Edit, Save, X, Trash2 } from "lucide-react";
 import { useDeleteCandidate } from "@features/candidates/hooks/useDeleteCandidate";
 import { useUpdateCandidateStatus } from "@features/candidates/hooks/useUpdateCandidateStatus";
 import { useUpdateCandidateConviction } from "@features/candidates/hooks/useUpdateCandidateConviction";
@@ -11,8 +11,9 @@ export interface CandidatesModalProps {
   onClose: () => void;
   data?: Candidate;
   onStatusChange?: (id: string, newStatus: string) => void;
-  onOpenUploadModal?: (candidateData: Candidate) => void;
+  onConvictionChange?: (id: string, hasConviction: boolean) => void; // <-- Добавляем новый пропс
   onCandidateDelete?: (id: string) => void;
+  onOpenUploadModal?: (candidateData: Candidate) => void;
 }
 
 export const CandidatesModal: React.FC<CandidatesModalProps> = ({
@@ -20,7 +21,7 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
   onClose,
   data,
   onStatusChange,
-  onOpenUploadModal,
+  onConvictionChange, // <-- Получаем пропс
   onCandidateDelete,
 }) => {
   const [isStatusEditMode, setIsStatusEditMode] = useState(false);
@@ -83,13 +84,13 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
   }, [data, open]);
 
   const handleStatusSelectChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
+    e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     setSelectedStatus(e.target.value);
   };
 
   const handleConvictionSelectChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
+    e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     setSelectedConviction(e.target.value === "true");
   };
@@ -122,7 +123,7 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
       await updateCandidateStatus(localData.id, selectedStatus);
       const updatedCandidate = { ...localData, status: selectedStatus };
       setLocalData(updatedCandidate);
-      onStatusChange?.(localData.id, selectedStatus);
+      onStatusChange?.(localData.id, selectedStatus); // Вызываем колбэк
       setIsStatusEditMode(false);
     } catch (err) {
       console.error("Ошибка при обновлении статуса:", err);
@@ -133,7 +134,12 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
     if (!localData?.id) return;
     try {
       await updateCandidateConviction(localData.id, selectedConviction);
-      setLocalData({ ...localData, has_conviction: selectedConviction });
+      const updatedCandidate = {
+        ...localData,
+        has_conviction: selectedConviction,
+      };
+      setLocalData(updatedCandidate);
+      onConvictionChange?.(localData.id, selectedConviction); // <-- Вызываем колбэк
       setIsConvictionEditMode(false);
     } catch (err) {
       console.error("Ошибка при обновлении судимости:", err);
@@ -149,15 +155,6 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
     } catch (err) {
       console.error("Ошибка при удалении кандидата:", err);
     }
-  };
-
-  const handleDownloadDocuments = () => {
-    console.log("Скачать документы кандидата:", localData);
-  };
-
-  const handleUploadDocuments = () => {
-    console.log("Загрузить документы кандидата:", localData);
-    if (localData) onOpenUploadModal?.(localData);
   };
 
   const formatExperience = (years: number) => {
@@ -240,7 +237,7 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
               <div className="flex items-center gap-2">
                 <span
                   className={`px-2 py-1 rounded ${getStatusColor(
-                    localData.status
+                    localData.status,
                   )}`}
                 >
                   {normalizeStatusForDisplay(localData.status)}
@@ -260,7 +257,7 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
               <div className="flex items-center gap-2">
                 <span
                   className={`px-2 py-1 rounded ${getConvictionColor(
-                    localData.has_conviction || false
+                    localData.has_conviction || false,
                   )}`}
                 >
                   {localData.has_conviction ? "Да" : "Нет"}
