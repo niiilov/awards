@@ -39,7 +39,6 @@ export const AllCandidates = ({
   // Отдельный хук для судимости
   const {
     updateCandidateConviction,
-    loading: convictionLoading,
     error: convictionError,
     clearError: clearConvictionError,
   } = useUpdateCandidateConviction();

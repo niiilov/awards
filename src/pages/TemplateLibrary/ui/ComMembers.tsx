@@ -10,18 +10,19 @@ import {
   TableCell,
 } from "@shared/ui/table";
 import { ComMembersModal } from "./ComMembersModal";
+import type { CommissionMember } from "@features/template-library/hooks/useCommissionMembers";
 
-interface Member {
-  id: string;
+interface AddMemberRequest {
   full_name: string;
   position: string;
 }
 
 interface MembersState {
-  members: Member[];
+  members: CommissionMember[];
   loading: boolean;
   error: string | null;
-  deleteMember: (memberId: string) => Promise<void>;
+  deleteMember: (memberId: string) => Promise<boolean>; // Изменено на Promise<boolean>
+  addMember: (memberData: AddMemberRequest) => Promise<CommissionMember>;
   refresh: () => void;
 }
 
@@ -31,11 +32,13 @@ interface ComMembersProps {
 
 export const ComMembers = ({ membersState }: ComMembersProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [selectedMember, setSelectedMember] = useState<CommissionMember | null>(
+    null,
+  );
 
   const { members, loading, error, deleteMember, refresh } = membersState;
 
-  const handleOpenModal = (member: any = null) => {
+  const handleOpenModal = (member: CommissionMember | null = null) => {
     setSelectedMember(member);
     setIsModalOpen(true);
   };
@@ -47,8 +50,12 @@ export const ComMembers = ({ membersState }: ComMembersProps) => {
 
   const handleDeleteMember = async (memberId: string) => {
     if (confirm("Вы уверены, что хотите удалить этого члена комиссии?")) {
-      await deleteMember(memberId);
-      refresh();
+      const success = await deleteMember(memberId);
+      if (success) {
+        refresh(); // Обновляем только если удаление успешно
+      } else {
+        alert("Не удалось удалить члена комиссии");
+      }
     }
   };
 
@@ -110,7 +117,7 @@ export const ComMembers = ({ membersState }: ComMembersProps) => {
                 </TableCell>
               </TableRow>
             ) : (
-              members.map((member: Member) => (
+              members.map((member) => (
                 <TableRow key={member.id}>
                   <TableCell className="text-center">
                     {member.full_name}

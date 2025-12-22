@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@shared/ui/button";
 import { Sheet, SheetTrigger, SheetContent } from "@shared/ui/sheet";
-import { Menu, CircleUserRound } from "lucide-react";
+import { Menu } from "lucide-react";
 import {
   Dialog,
   DialogContent,

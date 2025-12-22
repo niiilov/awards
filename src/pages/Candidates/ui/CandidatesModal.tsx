@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@shared/ui/button";
 import { Edit, Save, X, Trash2 } from "lucide-react";
 import { useDeleteCandidate } from "@features/candidates/hooks/useDeleteCandidate";
@@ -69,19 +69,6 @@ export const CandidatesModal: React.FC<CandidatesModalProps> = ({
     }
     return "Не прошёл";
   };
-
-  useEffect(() => {
-    if (data) {
-      setLocalData(data);
-      const normalizedStatus = normalizeStatusForDisplay(data.status);
-      setSelectedStatus(normalizedStatus);
-      setSelectedConviction(data.has_conviction || false);
-    }
-    setShowDeleteConfirm(false);
-    clearStatusError();
-    clearConvictionError();
-    clearDeleteError();
-  }, [data, open]);
 
   const handleStatusSelectChange = (
     e: React.ChangeEvent<HTMLSelectElement>,
