@@ -41,20 +41,26 @@ export const UploadAwards = () => {
     if (e.target.files && e.target.files[0]) handleFiles(e.target.files);
   };
 
+  // Функция для проверки допустимых форматов файлов
+  const isValidFileType = (fileName: string): boolean => {
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    const validExtensions = ["zip", "rar", "doc", "docx"];
+    return validExtensions.includes(ext || "");
+  };
+
   const handleFiles = async (files: FileList) => {
-    const validFiles = Array.from(files).filter((file) => {
-      const ext = file.name.split(".").pop()?.toLowerCase();
-      return ext === "pdf" || ext === "doc" || ext === "docx";
-    });
+    const validFiles = Array.from(files).filter((file) =>
+      isValidFileType(file.name),
+    );
 
     if (!validFiles.length) {
-      alert("Пожалуйста, выберите файлы формата PDF или DOC/DOCX");
+      alert("Пожалуйста, выберите файлы формата ZIP/RAR или DOC/DOCX");
       return;
     }
 
     console.log(
       "Начинаем загрузку файлов:",
-      validFiles.map((f) => f.name)
+      validFiles.map((f) => f.name),
     );
 
     const dataTransfer = new DataTransfer();
@@ -90,7 +96,7 @@ export const UploadAwards = () => {
         <div className="flex flex-col">
           <h2 className="text-xl font-semibold">Загрузка файлов</h2>
           <h3 className="text-sm text-neutral-500">
-            Загрузка поддерживает документы только форматом PDF/DOC/DOCX
+            Загрузка поддерживает документы форматом ZIP/RAR/DOC/DOCX
           </h3>
         </div>
 
@@ -117,7 +123,9 @@ export const UploadAwards = () => {
                   ? "Загрузка файлов..."
                   : 'Переместите файлы или выберите их в "Обзоре"'}
               </p>
-              <p className="text-sm text-gray-500">Формат: pdf, doc, docx</p>
+              <p className="text-sm text-gray-500">
+                Формат: zip, rar, doc, docx
+              </p>
               <Button
                 onClick={handleBrowseClick}
                 disabled={uploadLoading}
@@ -146,7 +154,7 @@ export const UploadAwards = () => {
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".pdf,.doc,.docx"
+            accept=".zip,.rar,.doc,.docx"
             onChange={handleChange}
             className="hidden"
             disabled={uploadLoading}
