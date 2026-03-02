@@ -74,6 +74,16 @@ export const Sidebar = ({ className }: SidebarProps) => {
         >
           Библиотека шаблонов
         </Link>
+        <Link
+          to="/admin"
+          className={`rounded-md font-medium px-8  py-2 transition ${
+            location.pathname === "/admin"
+              ? "bg-blue-100 hover:bg-blue-200 font-medium"
+              : "hover:bg-gray-100 text-[#AAAAAA]"
+          }`}
+        >
+          Админ
+        </Link>
       </nav>
     </aside>
   );

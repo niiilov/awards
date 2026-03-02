@@ -21,6 +21,7 @@ import { Candidates } from "@pages/Candidates";
 import { Protocol } from "@pages/Protocol";
 import { Certificates } from "@pages/Certificates";
 import { TemplateLibrary } from "@pages/TemplateLibrary";
+import { Admin } from "./Admin";
 
 // const ProtectedRoute: FC<{ children: ReactNode }> = observer(({ children }) => {
 //   const location = useLocation();
@@ -74,6 +75,7 @@ export const Router: FC = () => {
             path={ROUTE_CONSTANTS.TEMPLATELIBRARY}
             element={<TemplateLibrary />}
           />
+          <Route path={ROUTE_CONSTANTS.ADMIN} element={<Admin />} />
 
           {/* Редирект для несуществующих путей */}
           <Route

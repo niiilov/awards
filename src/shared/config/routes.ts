@@ -11,6 +11,7 @@ export const ROUTE_CONSTANTS = {
   PROTOCOL: "/protocol",
   CERTIFICATES: "/certificates",
   TEMPLATELIBRARY: "/template-library",
+  ADMIN: "/admin",
 };
 
 // Загрузка наградных листов - /upload-awards
